@@ -16,8 +16,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import org.mifos.core.common.di.AppDispatchers
-import org.mifos.core.database.AppDatabase
+import org.mifos.open.banking.core.common.di.AppDispatchers
+import org.mifos.open.banking.core.database.AppDatabase
 import kotlin.coroutines.CoroutineContext
 
 actual val testPlatformModule: Module = module {

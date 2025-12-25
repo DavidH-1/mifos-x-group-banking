@@ -12,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.core.datastore"
+    namespace = "org.mifos.open.banking.core.datastore"
     defaultConfig {
         consumerProguardFiles("consumer-rules.pro")
     }

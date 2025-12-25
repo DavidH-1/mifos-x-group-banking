@@ -14,10 +14,10 @@ import cmp.navigation.authenticatednavbar.AuthenticatedNavbarNavigationViewModel
 import cmp.navigation.rootnav.RootNavViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
-import org.mifos.core.data.di.DataModule
-import org.mifos.core.datastore.di.DatastoreModule
-import org.mifos.feature.home.di.HomeModule
-import org.mifos.feature.settings.SettingsModule
+import org.mifos.open.banking.core.data.di.DataModule
+import org.mifos.open.banking.core.datastore.di.DatastoreModule
+import org.mifos.open.banking.feature.home.di.HomeModule
+import org.mifos.open.banking.feature.settings.SettingsModule
 import template.core.base.analytics.di.analyticsModule
 import template.core.base.common.di.CommonModule
 import template.core.base.platform.di.platformModule

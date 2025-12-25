@@ -13,7 +13,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.feature.profile"
+    namespace = "org.mifos.open.banking.feature.profile"
 }
 
 kotlin {
@@ -31,6 +31,6 @@ kotlin {
 
 compose {
     resources {
-        packageOfResClass = "org.mifos.feature.profile.generated.resources"
+        packageOfResClass = "org.mifos.open.banking.feature.profile.generated.resources"
     }
 }
