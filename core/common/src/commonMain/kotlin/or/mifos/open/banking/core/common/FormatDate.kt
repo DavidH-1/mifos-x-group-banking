@@ -7,7 +7,7 @@
  *
  * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
-package org.mifos.open.banking.core.common
+package or.mifos.open.banking.core.common
 
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone

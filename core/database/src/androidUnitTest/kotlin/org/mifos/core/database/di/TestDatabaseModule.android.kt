@@ -7,7 +7,7 @@
  *
  * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
-package org.mifos.open.banking.core.database.di
+package org.mifos.core.database.di
 
 import android.content.Context
 import androidx.room.Room
