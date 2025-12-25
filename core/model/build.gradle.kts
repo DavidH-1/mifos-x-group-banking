@@ -14,7 +14,7 @@ plugins {
 }
 
 android {
-    namespace = "org.mifos.core.model"
+    namespace = "org.mifos.open.banking.core.model"
 }
 
 kotlin {

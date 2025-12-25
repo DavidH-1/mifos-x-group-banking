@@ -18,9 +18,9 @@ import androidx.navigation.navigation
 import cmp.navigation.authenticatednavbar.AuthenticatedNavbarRoute
 import cmp.navigation.authenticatednavbar.authenticatedNavbarGraph
 import kotlinx.serialization.Serializable
-import org.mifos.feature.settings.navigateToSettings
-import org.mifos.feature.settings.notificationDestination
-import org.mifos.feature.settings.settingsDestination
+import org.mifos.open.banking.feature.settings.navigateToSettings
+import org.mifos.open.banking.feature.settings.notificationDestination
+import org.mifos.open.banking.feature.settings.settingsDestination
 
 @Serializable
 internal data object AuthenticatedGraphRoute

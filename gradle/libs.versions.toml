@@ -102,12 +102,12 @@ gitLive = "2.1.0"
 aboutLibraries = "12.2.3"
 
 # Desktop Version
-desktopPackageName = "DesktopApp"
-desktopPackageNamespace = "cmp.desktop.app"
+desktopPackageName = "MifosXOpenBankingDesktop"
+desktopPackageNamespace = "org.mifos.open.banking"
 desktopPackageVersion = "1.0.0"
 
 # Android Version
-androidPackageNamespace = "cmp.android.app"
+androidPackageNamespace = "org.mifos.open.banking"
 
 #Room
 room = "2.7.2"

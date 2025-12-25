@@ -10,15 +10,15 @@ module FastlaneConfig
     # ============================================================================
     # Core Project Information
     # ============================================================================
-    PROJECT_NAME = "kmp-project-template"
-    ORGANIZATION_NAME = "Mifos"
+    PROJECT_NAME = "MifosXOpenBanking"
+    ORGANIZATION_NAME = "MifosXOpenBanking"
 
     # ============================================================================
     # Android Configuration
     # ============================================================================
     ANDROID = {
       # Package name for Android app
-      package_name: "cmp.android.app",
+      package_name: "org.mifos.open.banking",
 
       # Play Store credentials file path
       play_store_json_key: "secrets/playStorePublishServiceCredentialsFile.json",
@@ -51,7 +51,7 @@ module FastlaneConfig
     # ============================================================================
     IOS = {
       # Bundle identifier
-      app_identifier: "org.mifos.kmp.template",
+      app_identifier: "org.mifos.open.banking",
 
       # Team and Developer Account
       team_id: "L432S2FZP5",
@@ -83,8 +83,8 @@ module FastlaneConfig
         match_git_branch: "master",
         match_git_private_key: "./secrets/match_ci_key",
         provisioning_profiles: {
-          adhoc: "match AdHoc org.mifos.kmp.template",
-          appstore: "match AppStore org.mifos.kmp.template"
+          adhoc: "match AdHoc org.mifos.open.banking",
+          appstore: "match AppStore org.mifos.open.banking"
         }
       },
 

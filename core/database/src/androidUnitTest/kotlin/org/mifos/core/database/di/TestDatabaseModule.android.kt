@@ -7,7 +7,7 @@
  *
  * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
-package org.mifos.core.database.di
+package org.mifos.open.banking.core.database.di
 
 import android.content.Context
 import androidx.room.Room
@@ -16,8 +16,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import org.mifos.core.common.di.AppDispatchers
-import org.mifos.core.database.AppDatabase
+import org.mifos.open.banking.core.common.di.AppDispatchers
+import org.mifos.open.banking.core.database.AppDatabase
 import kotlin.coroutines.CoroutineContext
 
 actual val testPlatformModule: Module = module {
