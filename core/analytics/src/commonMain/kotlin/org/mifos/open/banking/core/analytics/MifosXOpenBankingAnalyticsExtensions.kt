@@ -250,7 +250,9 @@ fun AnalyticsHelper.trackBackupRestore(
 /**
  * Convenience function to create Mifos analytics tracker
  */
-fun AnalyticsHelper.mifosxopenbankingTracker(): MifosXOpenBankingAnalyticsTracker = MifosXOpenBankingAnalyticsTracker(this)
+fun AnalyticsHelper.mifosxopenbankingTracker(): MifosXOpenBankingAnalyticsTracker {
+    return MifosXOpenBankingAnalyticsTracker(this)
+}
 
 /**
  * Extension for tracking custom business events specific to microfinance
