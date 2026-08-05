@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.loginsignup
 
@@ -22,6 +22,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +33,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -36,7 +41,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kpt.core.base.designsystem.component.AppCard
@@ -52,14 +60,23 @@ import org.mifos.groupbanking.feature.loginsignup.components.AuthDividerLabeled
 import org.mifos.groupbanking.feature.loginsignup.components.AuthErrorBanner
 import org.mifos.groupbanking.feature.loginsignup.components.AuthModeToggleTabs
 import org.mifos.groupbanking.feature.loginsignup.components.AuthTextField
+import org.mifos.groupbanking.feature.loginsignup.components.AuthTrustFooter
+import org.mifos.groupbanking.feature.loginsignup.components.DemoExploreConfirmDialog
+import org.mifos.groupbanking.feature.loginsignup.components.PasswordRequirementChips
 import org.mifos.groupbanking.feature.loginsignup.components.ZeroGroupsEmptyState
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.Res
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_accept_invitation_cd
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_action_accept_invitation
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_action_biometric
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_action_create_account
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_action_demo_explore
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_action_forgot_password
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_action_sign_in
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_biometric_cd
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_create_account_cd
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_demo_explore_cd
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_divider_new_login
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_divider_new_signup
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_divider_or
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_error_account_exists
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_error_biometric_failed
@@ -82,7 +99,11 @@ import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_lo
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_field_password_placeholder_signup
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_forgot_password_cd
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_forgot_password_snackbar
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_headline_login
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_headline_signup
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_sign_in_cd
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_subtitle_login
+import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_subtitle_signup
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_title
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_validation_email_phone_invalid
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.screens_login_signup_validation_identifier_invalid
@@ -101,13 +122,20 @@ internal fun LoginSignupScreen(
     onNavigateToOrganizerDashboard: () -> Unit,
     onNavigateToGroupList: () -> Unit,
     onNavigateToGroupTypePicker: () -> Unit,
-    onNavigateToJoinWithCode: () -> Unit,
+    onNavigateToJoinWithCode: (inviteCode: String?) -> Unit,
     modifier: Modifier = Modifier,
+    pendingInviteCode: String? = null,
     viewModel: LoginSignupViewModel = koinViewModel(),
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val forgotPasswordSnackbarMessage = stringResource(Res.string.screens_login_signup_forgot_password_snackbar)
+
+    // Seed the pre-auth invite code carried from join-with-code into VM state so an authenticated
+    // login/signup success RESUMES the join instead of the default landing (TC-LS-010, F3/F4).
+    LaunchedEffect(pendingInviteCode) {
+        viewModel.trySendAction(LoginSignupAction.Internal.SetPendingInviteCode(pendingInviteCode))
+    }
 
     EventsEffect(viewModel) { event ->
         when (event) {
@@ -115,7 +143,9 @@ internal fun LoginSignupScreen(
             LoginSignupEvent.NavigateToOrganizerDashboard -> onNavigateToOrganizerDashboard()
             LoginSignupEvent.NavigateToGroupList -> onNavigateToGroupList()
             LoginSignupEvent.NavigateToGroupTypePicker -> onNavigateToGroupTypePicker()
-            LoginSignupEvent.NavigateToJoinWithCode -> onNavigateToJoinWithCode()
+            // inviteCode carried on the event (TC-LS-010 resume) is threaded to the nav callback so
+            // join-with-code can pre-fill it; null for a pre-auth Accept-Invitation / zero-groups tap.
+            is LoginSignupEvent.NavigateToJoinWithCode -> onNavigateToJoinWithCode(event.inviteCode)
             is LoginSignupEvent.ShowSnackbar -> snackbarHostState.showSnackbar(
                 message = when (event.message) {
                     "login_signup_forgot_password_snackbar" -> forgotPasswordSnackbarMessage
@@ -160,6 +190,17 @@ internal fun LoginSignupContent(
             LoginSignupScreenState.Error -> AuthFormSection(state = state, onAction = onAction, isLoading = false)
             LoginSignupScreenState.ZeroGroups -> ZeroGroupsSection(onAction = onAction)
         }
+
+        // Demo Explore confirm dialog (ui.yaml#components.demo_confirm_dialog). Stays up while
+        // isSeedingDemo so the confirm button can show its seeding spinner (OnDemoConfirm flips
+        // showDemoDialog=false + isSeedingDemo=true in one update; the seed then navigates away).
+        if (state.showDemoDialog || state.isSeedingDemo) {
+            DemoExploreConfirmDialog(
+                isSeeding = state.isSeedingDemo,
+                onConfirm = { onAction(LoginSignupAction.OnDemoConfirm) },
+                onCancel = { onAction(LoginSignupAction.OnDemoCancel) },
+            )
+        }
     }
 }
 
@@ -181,6 +222,8 @@ internal fun AuthFormSection(
     val loginButtonCd = stringResource(Res.string.screens_login_signup_sign_in_cd)
     val signupButtonCd = stringResource(Res.string.screens_login_signup_create_account_cd)
     val biometricButtonCd = stringResource(Res.string.screens_login_signup_biometric_cd)
+    val acceptInvitationCd = stringResource(Res.string.screens_login_signup_accept_invitation_cd)
+    val demoExploreCd = stringResource(Res.string.screens_login_signup_demo_explore_cd)
 
     Column(
         modifier = modifier
@@ -189,8 +232,33 @@ internal fun AuthFormSection(
             .padding(horizontal = sp.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        val isSignup = state.mode == AuthMode.Signup
+
         Spacer(Modifier.height(sp.xxl))
         AuthBrandHeader()
+        Spacer(Modifier.height(sp.xl))
+
+        Text(
+            text = stringResource(
+                if (isSignup) Res.string.screens_login_signup_headline_signup else Res.string.screens_login_signup_headline_login,
+            ),
+            // Serif headline is a brand element; size from the type scale, family stays serif.
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.SemiBold,
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(sp.xs))
+        Text(
+            text = stringResource(
+                if (isSignup) Res.string.screens_login_signup_subtitle_signup else Res.string.screens_login_signup_subtitle_login,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
         Spacer(Modifier.height(sp.lg))
 
         AppCard(modifier = Modifier.fillMaxWidth().testTag(LoginSignupTestTags.AUTH_CARD)) {
@@ -214,6 +282,7 @@ internal fun AuthFormSection(
                         placeholder = stringResource(Res.string.screens_login_signup_field_name_placeholder),
                         onValueChange = { onAction(LoginSignupAction.OnNameChange(it)) },
                         enabled = !isLoading,
+                        leadingIcon = Icons.Filled.Person,
                         errorMessage = state.validationErrors["name"]?.let { validationMessage(it) },
                         contentDescription = stringResource(Res.string.screens_login_signup_field_name_cd),
                         modifier = Modifier.testTag(LoginSignupTestTags.FIELD_NAME),
@@ -240,6 +309,7 @@ internal fun AuthFormSection(
                     ),
                     onValueChange = { onAction(LoginSignupAction.OnEmailPhoneChange(it)) },
                     enabled = !isLoading,
+                    leadingIcon = Icons.Filled.MailOutline,
                     keyboardType = if (isLoginMode) KeyboardType.Text else KeyboardType.Email,
                     errorMessage = state.validationErrors["emailPhone"]?.let { validationMessage(it) },
                     contentDescription = stringResource(
@@ -264,10 +334,17 @@ internal fun AuthFormSection(
                     onValueChange = { onAction(LoginSignupAction.OnPasswordChange(it)) },
                     enabled = !isLoading,
                     isPassword = true,
+                    leadingIcon = Icons.Filled.Lock,
                     errorMessage = state.validationErrors["password"]?.let { validationMessage(it) },
                     contentDescription = stringResource(Res.string.screens_login_signup_field_password_cd),
                     modifier = Modifier.testTag(LoginSignupTestTags.FIELD_PASSWORD),
                 )
+
+                // Live Fineract password-policy chips — signup only (ui.yaml#password_requirement_chips).
+                if (isSignup) {
+                    Spacer(Modifier.height(sp.md))
+                    PasswordRequirementChips(requirements = state.passwordRequirements)
+                }
 
                 if (state.mode == AuthMode.Login) {
                     TextButton(
@@ -349,9 +426,65 @@ internal fun AuthFormSection(
                     }
                 }
 
+                // First-class secondary auth entries — shown on the content state in BOTH login and
+                // signup modes (ui.yaml#states.content). Hidden while a submit is in-flight.
+                if (!isLoading) {
+                    Spacer(Modifier.height(sp.lg))
+                    AuthDividerLabeled(
+                        label = stringResource(
+                            if (isSignup) {
+                                Res.string.screens_login_signup_divider_new_signup
+                            } else {
+                                Res.string.screens_login_signup_divider_new_login
+                            },
+                        ),
+                        modifier = Modifier.testTag(LoginSignupTestTags.ALT_ACTIONS_DIVIDER),
+                    )
+                    Spacer(Modifier.height(sp.md))
+
+                    // accept_invitation_button (outlined, mail icon) → OnAcceptInvitationTap (pre-auth).
+                    KptOutlinedButton(
+                        onClick = { onAction(LoginSignupAction.OnAcceptInvitationTap) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp)
+                            .testTag(LoginSignupTestTags.ACCEPT_INVITATION_BUTTON)
+                            .semantics { contentDescription = acceptInvitationCd },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MailOutline,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(Modifier.width(sp.sm))
+                        Text(stringResource(Res.string.screens_login_signup_action_accept_invitation))
+                    }
+                    Spacer(Modifier.height(sp.sm))
+
+                    // demo_explore_button (text, play-circle icon) → OnDemoExplore (arms the dialog).
+                    TextButton(
+                        onClick = { onAction(LoginSignupAction.OnDemoExplore) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp)
+                            .testTag(LoginSignupTestTags.DEMO_EXPLORE_BUTTON)
+                            .semantics { contentDescription = demoExploreCd },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.PlayCircleOutline,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(Modifier.width(sp.sm))
+                        Text(stringResource(Res.string.screens_login_signup_action_demo_explore))
+                    }
+                }
+
                 Spacer(Modifier.height(sp.lg))
             }
         }
+        Spacer(Modifier.height(sp.lg))
+        AuthTrustFooter()
         Spacer(Modifier.height(sp.xxl))
     }
 }

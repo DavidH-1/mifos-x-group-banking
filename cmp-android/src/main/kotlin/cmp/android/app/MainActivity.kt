@@ -16,7 +16,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,40 +83,50 @@ class MainActivity : AppCompatActivity() {
 
             lifecycleTracker.markAppLaunchComplete()
 
-            SharedApp(
-                updateScreenCapture = ::updateScreenCapture,
-                handleRecreate = ::handleRecreate,
-                handleThemeMode = {
-                    AppCompatDelegate.setDefaultNightMode(it)
-                },
-                handleAppLocale = { localeTag ->
-                    val currentLocales = AppCompatDelegate.getApplicationLocales()
-                    val newLocales = if (localeTag != null) {
-                        LocaleListCompat.forLanguageTags(localeTag)
-                    } else {
-                        // System Default: clear app-specific locale
-                        LocaleListCompat.getEmptyLocaleList()
-                    }
-
-                    // Only update if the locale has actually changed
-                    if (currentLocales != newLocales) {
-                        AppCompatDelegate.setApplicationLocales(newLocales)
-                        // Update Locale.setDefault for non-UI formatting
-                        if (localeTag != null) {
-                            // Use forLanguageTag to properly parse locales like "en-GB", "pt-BR"
-                            Locale.setDefault(Locale.forLanguageTag(localeTag))
+            // testTagsAsResourceId surfaces Compose Modifier.testTag(...) as Android
+            // resource-ids so Maestro / UiAutomator device-tests can select by id
+            // (RULE-IMPL-BEHAVIOR-EXECUTED-001). Template-derived (cmp-android entry) —
+            // the upstream fix is enqueued as template-testtags-as-resourceid-compose-root.
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .semantics { testTagsAsResourceId = true },
+            ) {
+                SharedApp(
+                    updateScreenCapture = ::updateScreenCapture,
+                    handleRecreate = ::handleRecreate,
+                    handleThemeMode = {
+                        AppCompatDelegate.setDefaultNightMode(it)
+                    },
+                    handleAppLocale = { localeTag ->
+                        val currentLocales = AppCompatDelegate.getApplicationLocales()
+                        val newLocales = if (localeTag != null) {
+                            LocaleListCompat.forLanguageTags(localeTag)
                         } else {
-                            // Reset to true system default locale from device configuration
-                            // Use Resources.getSystem() to get device locale unaffected by app overrides
-                            val systemLocale = Resources.getSystem().configuration.locales[0]
-                            Locale.setDefault(systemLocale)
+                            // System Default: clear app-specific locale
+                            LocaleListCompat.getEmptyLocaleList()
                         }
-                    }
-                },
-                onSplashScreenRemoved = {
-                    shouldShowSplashScreen = false
-                },
-            )
+
+                        // Only update if the locale has actually changed
+                        if (currentLocales != newLocales) {
+                            AppCompatDelegate.setApplicationLocales(newLocales)
+                            // Update Locale.setDefault for non-UI formatting
+                            if (localeTag != null) {
+                                // Use forLanguageTag to properly parse locales like "en-GB", "pt-BR"
+                                Locale.setDefault(Locale.forLanguageTag(localeTag))
+                            } else {
+                                // Reset to true system default locale from device configuration
+                                // Use Resources.getSystem() to get device locale unaffected by app overrides
+                                val systemLocale = Resources.getSystem().configuration.locales[0]
+                                Locale.setDefault(systemLocale)
+                            }
+                        }
+                    },
+                    onSplashScreenRemoved = {
+                        shouldShowSplashScreen = false
+                    },
+                )
+            }
         }
     }
 

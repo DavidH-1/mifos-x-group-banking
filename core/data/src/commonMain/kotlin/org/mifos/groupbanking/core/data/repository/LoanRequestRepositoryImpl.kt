@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.data.repository
 
@@ -50,6 +50,11 @@ class LoanRequestRepositoryImpl(
                 result
             }
         }
+    }
+
+    override suspend fun memberSavingsBalance(clientId: Long): NetworkResult<Double, NetworkError> {
+        Logger.d(TAG) { "memberSavingsBalance: resolving for clientId=$clientId" }
+        return api.getMemberSavingsBalance(clientId)
     }
 
     override suspend fun enqueueOffline(payload: LoanRequestPayload): Long {

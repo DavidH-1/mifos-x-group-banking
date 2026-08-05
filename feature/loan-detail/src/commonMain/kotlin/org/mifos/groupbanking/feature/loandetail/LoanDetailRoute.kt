@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.loandetail
 
@@ -21,10 +21,10 @@ import kpt.core.base.ui.nav.composableWithRootPushTransitions
  * See API.md#route.
  */
 @Serializable
-data class LoanDetailRoute(val loanId: Long)
+data class LoanDetailRoute(val loanId: Long, val viewerRole: String)
 
-fun NavController.navigateToLoanDetail(loanId: Long, navOptions: NavOptions? = null) =
-    navigate(LoanDetailRoute(loanId = loanId), navOptions)
+fun NavController.navigateToLoanDetail(loanId: Long, viewerRole: String, navOptions: NavOptions? = null) =
+    navigate(LoanDetailRoute(loanId = loanId, viewerRole = viewerRole), navOptions)
 
 /**
  * Registers [LoanDetailScreen] on the host [NavGraphBuilder]. [onNavigateBack] closes the single
@@ -47,6 +47,7 @@ fun NavGraphBuilder.loanDetailScreen(
         val route = backStackEntry.toRoute<LoanDetailRoute>()
         LoanDetailScreen(
             loanId = route.loanId,
+            viewerRole = route.viewerRole,
             onNavigateBack = onNavigateBack,
             onShowRepaymentDialog = onShowRepaymentDialog,
             onShowDefaultDialog = onShowDefaultDialog,

@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Mifos Initiative
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+    If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+-->
 <resources>
     <string name="screens_member_invite_topbar_title">Invite Member</string>
     <string name="screens_member_invite_back_cd">Navigate back</string>
@@ -44,6 +53,7 @@
     <string name="screens_member_invite_snack_code_copied">Invite code copied</string>
     <string name="screens_member_invite_snack_link_copied">Invite link copied</string>
     <string name="screens_member_invite_snack_revoked">Invite revoked</string>
+    <string name="screens_member_invite_snack_queued_offline">You\'re offline — the invite is queued and will be sent automatically once you\'re back online.</string>
 
     <string name="screens_member_invite_error_validation">Please enter a valid phone number or email address.</string>
     <string name="screens_member_invite_error_network">No internet connection. Please check your network and try again.</string>

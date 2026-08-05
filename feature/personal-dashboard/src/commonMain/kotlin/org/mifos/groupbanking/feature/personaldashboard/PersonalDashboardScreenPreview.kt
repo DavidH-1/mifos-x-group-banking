@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.personaldashboard
 
@@ -126,6 +126,9 @@ private fun PersonalDashboardTopSectionPreview() {
             groups = previewGroups,
             selectedGroupId = previewGroups[0].groupId,
             onGroupSelected = {},
+            onOpenSettings = {},
+            onOpenSyncStatus = {},
+            onOpenNotifications = {},
         )
     }
 }
@@ -134,7 +137,12 @@ private fun PersonalDashboardTopSectionPreview() {
 @Composable
 private fun PersonalDashboardLoadingSectionPreview() {
     KptTheme {
-        PersonalDashboardLoadingSection(greeting = "Good morning, Amina Wanjiru")
+        PersonalDashboardLoadingSection(
+            greeting = "Good morning, Amina Wanjiru",
+            onOpenSettings = {},
+            onOpenSyncStatus = {},
+            onOpenNotifications = {},
+        )
     }
 }
 
@@ -154,6 +162,9 @@ private fun PersonalDashboardContentSectionAccumulatingPreview() {
             state = accumulatingState,
             greeting = "Good morning, Amina Wanjiru",
             onAction = {},
+            onOpenSettings = {},
+            onOpenSyncStatus = {},
+            onOpenNotifications = {},
         )
     }
 }
@@ -166,6 +177,9 @@ private fun PersonalDashboardContentSectionRotatingPreview() {
             state = rotatingState,
             greeting = "Good afternoon, Joseph Kamau",
             onAction = {},
+            onOpenSettings = {},
+            onOpenSyncStatus = {},
+            onOpenNotifications = {},
         )
     }
 }
@@ -174,7 +188,12 @@ private fun PersonalDashboardContentSectionRotatingPreview() {
 @Composable
 private fun PersonalDashboardEmptySectionPreview() {
     KptTheme {
-        PersonalDashboardEmptySection(greeting = "Good morning, Amina Wanjiru")
+        PersonalDashboardEmptySection(
+            greeting = "Good morning, Amina Wanjiru",
+            onOpenSettings = {},
+            onOpenSyncStatus = {},
+            onOpenNotifications = {},
+        )
     }
 }
 
@@ -186,6 +205,9 @@ private fun PersonalDashboardErrorSectionPreview() {
             greeting = "Good morning, Amina Wanjiru",
             groupName = "Mwangaza Women's Group",
             onRetry = {},
+            onOpenSettings = {},
+            onOpenSyncStatus = {},
+            onOpenNotifications = {},
         )
     }
 }

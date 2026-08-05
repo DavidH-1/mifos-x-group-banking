@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.shareoutexecute
 
@@ -138,12 +138,13 @@ internal fun ShareOutExecuteScreen(
     typeConfig: GroupTypeConfig,
     totalPool: Double,
     memberPayouts: List<MemberPayout>,
+    cycleNumber: Int,
     onNavigateToGroupDashboard: (groupId: String) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     biometricAuthenticator: BiometricAuthenticator = koinInject(),
     viewModel: ShareOutExecuteViewModel = koinViewModel(
-        parameters = { parametersOf(groupId, typeConfig, totalPool, memberPayouts) },
+        parameters = { parametersOf(groupId, typeConfig, totalPool, memberPayouts, cycleNumber) },
     ),
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
@@ -241,8 +242,8 @@ internal fun ShareOutExecuteContent(
         Column(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(MaterialTheme.spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
             ) {
                 item(key = "summary") { SummaryCard(state = state) }
 

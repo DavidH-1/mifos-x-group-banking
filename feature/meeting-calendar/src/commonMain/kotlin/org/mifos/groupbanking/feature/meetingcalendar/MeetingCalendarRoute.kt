@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.meetingcalendar
 
@@ -38,7 +38,7 @@ fun NavController.navigateToMeetingCalendar(centerId: Int, navOptions: NavOption
  */
 fun NavGraphBuilder.meetingCalendarScreen(
     onNavigateToConduct: (meetingId: String, meetingNumber: Int, centerId: Int) -> Unit,
-    onNavigateToReview: (meetingId: String, meetingNumber: Int, centerId: Int) -> Unit,
+    onNavigateToReview: (meetingId: String, meetingNumber: Int, centerId: Int, launchedFrom: String) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     composableWithPushTransitions<MeetingCalendarRoute> { backStackEntry ->
@@ -53,8 +53,8 @@ fun NavGraphBuilder.meetingCalendarScreen(
             onNavigateToConduct = { meetingId, meetingNumber ->
                 onNavigateToConduct(meetingId, meetingNumber, route.centerId)
             },
-            onNavigateToReview = { meetingId, meetingNumber ->
-                onNavigateToReview(meetingId, meetingNumber, route.centerId)
+            onNavigateToReview = { meetingId, meetingNumber, launchedFrom ->
+                onNavigateToReview(meetingId, meetingNumber, route.centerId, launchedFrom)
             },
             onNavigateBack = onNavigateBack,
         )

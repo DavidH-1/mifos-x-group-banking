@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.loginsignup
 
@@ -22,6 +22,8 @@ import kpt.core.base.network.NetworkResult
 import kpt.core.base.observability.CrashReporter
 import kpt.core.base.observability.CrashSeverity
 import kpt.core.base.ui.viewmodel.BaseViewModel
+import org.mifos.groupbanking.core.data.demo.DemoSession
+import org.mifos.groupbanking.core.data.demo.DemoSessionManager
 import org.mifos.groupbanking.core.data.repository.AuthRepository
 import org.mifos.groupbanking.core.model.AuthSession
 import org.mifos.groupbanking.core.model.GroupMembership
@@ -34,8 +36,16 @@ private const val TAG = "LoginSignupViewModel"
 
 private const val MIN_NAME_LENGTH = 2
 private const val MIN_PASSWORD_LENGTH_SIGNUP = 8
+
+// Fineract password-policy target surfaced live via the signup password-requirement chips
+// (ui.yaml#components.password_requirement_chips). These are ADVISORY per-rule feedback — the
+// submit-enable gate still uses the min-8 [validatePassword] check (see class KDoc / handleSignupTap)
+// so existing behaviour + tests are preserved; the chips guide users toward a policy-compliant
+// password so signup stops bouncing off a raw Fineract 400.
+private const val STRONG_PASSWORD_MIN_LENGTH = 12
 private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
 private val E164_PHONE_REGEX = Regex("^\\+[1-9]\\d{6,14}$")
+
 // Sign-in also accepts a username: 3-30 chars, starts alphanumeric, then letters/digits/._-
 private val USERNAME_REGEX = Regex("^[A-Za-z0-9][A-Za-z0-9._-]{2,29}$")
 
@@ -113,6 +123,32 @@ sealed interface LoginSignupError {
 }
 
 /**
+ * Live per-rule verdict for the signup password, mirroring the Fineract password policy. Each
+ * flag is recomputed from the current [LoginSignupState.password] by [evaluatePasswordRequirements]
+ * on every [LoginSignupAction.OnPasswordChange] and rendered as a filled/muted chip
+ * (ui.yaml#components.password_requirement_chips). ADVISORY only — see [STRONG_PASSWORD_MIN_LENGTH].
+ * See API.md#state.
+ */
+@Serializable
+@Immutable
+data class PasswordRequirements(
+    /** ≥ [STRONG_PASSWORD_MIN_LENGTH] characters. */
+    val hasMinLength: Boolean = false,
+    /** Contains BOTH an upper- and a lower-case letter. */
+    val hasMixedCase: Boolean = false,
+    /** Contains at least one digit. */
+    val hasDigit: Boolean = false,
+    /** Contains at least one non-alphanumeric symbol. */
+    val hasSymbol: Boolean = false,
+    /** No two adjacent identical characters. */
+    val hasNoRepeats: Boolean = false,
+) {
+    /** True only when every Fineract-policy rule is satisfied. */
+    val allSatisfied: Boolean
+        get() = hasMinLength && hasMixedCase && hasDigit && hasSymbol && hasNoRepeats
+}
+
+/**
  * MVI state for `LoginSignupViewModel`. Field set + defaults are a verbatim mirror of
  * ui.yaml#state_model.LoginSignupViewModel.state. [groupMemberships] and [screenState]/[error]
  * are `@Transient` — [GroupMembership] is an external core/model type that carries a
@@ -128,6 +164,9 @@ data class LoginSignupState(
     val name: String = "",
     val emailPhone: String = "",
     val password: String = "",
+    // Live per-rule verdict for the signup password (ui.yaml#components.password_requirement_chips),
+    // recomputed on every OnPasswordChange. Advisory feedback only — see PasswordRequirements KDoc.
+    val passwordRequirements: PasswordRequirements = PasswordRequirements(),
     val pin: String = "",
     val isSubmitting: Boolean = false,
     val validationErrors: Map<String, String> = emptyMap(),
@@ -139,6 +178,13 @@ data class LoginSignupState(
     val groupMemberships: List<GroupMembership> = emptyList(),
     @Transient
     val screenState: LoginSignupScreenState = LoginSignupScreenState.Content,
+    // Demo Explore confirm-dialog visibility (ui.yaml#demo_confirm_dialog, F1/B1/G1).
+    val showDemoDialog: Boolean = false,
+    // True while the offline demo fixture hydrates into the local cache (ui.yaml#state.isSeedingDemo).
+    val isSeedingDemo: Boolean = false,
+    // Invite code carried pre-auth from join-with-code (nav_param). When present + 6-char, an
+    // on_login/on_signup success resumes the join instead of the default landing (TC-LS-010).
+    val pendingInviteCode: String? = null,
 )
 
 /**
@@ -150,7 +196,13 @@ sealed interface LoginSignupEvent {
     data object NavigateToOrganizerDashboard : LoginSignupEvent
     data object NavigateToGroupList : LoginSignupEvent
     data object NavigateToGroupTypePicker : LoginSignupEvent
-    data object NavigateToJoinWithCode : LoginSignupEvent
+
+    /**
+     * Navigates to join-with-code. [inviteCode] is null for a pre-auth Accept-Invitation tap or a
+     * zero-groups Join tap (the code is typed on join-with-code); non-null when an authenticated
+     * success RESUMES a pending pre-auth join (TC-LS-010) — ui.yaml#events.NavigateToJoinWithCode.
+     */
+    data class NavigateToJoinWithCode(val inviteCode: String? = null) : LoginSignupEvent
     data class ShowSnackbar(val message: String) : LoginSignupEvent
     data object PromptBiometric : LoginSignupEvent
 }
@@ -174,12 +226,30 @@ sealed interface LoginSignupAction {
     data object OnJoinWithCodeTap : LoginSignupAction
     data object OnForgotPassword : LoginSignupAction
 
+    /** First-class PRE-AUTH accept-invitation entry (ui.yaml#accept_invitation_button, F2/B4/G2). */
+    data object OnAcceptInvitationTap : LoginSignupAction
+
+    /** Opens the Demo Explore confirm dialog (ui.yaml#demo_explore_button, F1/B1/G1). */
+    data object OnDemoExplore : LoginSignupAction
+
+    /** Confirms Demo Explore — seeds the offline demo session then lands on organizer-dashboard. */
+    data object OnDemoConfirm : LoginSignupAction
+
+    /** Dismisses the Demo Explore confirm dialog (ui.yaml#demo_dialog.cancel). */
+    data object OnDemoCancel : LoginSignupAction
+
     /** Async coroutine results — routed via `trySendAction`, never dispatched by the UI. */
     sealed interface Internal : LoginSignupAction {
         data class SessionChecked(val session: AuthSession?) : Internal
         data class LoginResult(val result: NetworkResult<AuthSession, NetworkError>) : Internal
         data class SignupResult(val result: NetworkResult<AuthSession, NetworkError>) : Internal
         data class BiometricResult(val result: NetworkResult<UserProfile, NetworkError>) : Internal
+
+        /** Seeds the [pendingInviteCode] nav_param into state on first composition (TC-LS-010). */
+        data class SetPendingInviteCode(val code: String?) : Internal
+
+        /** Result of the offline [DemoSessionManager.startDemoSession] seed. */
+        data class DemoSeedResult(val result: Result<DemoSession>) : Internal
     }
 }
 
@@ -205,6 +275,7 @@ sealed interface LoginSignupAction {
  */
 internal class LoginSignupViewModel(
     private val authRepository: AuthRepository,
+    private val demoSessionManager: DemoSessionManager,
     private val analytics: KptAnalyticsTracker,
     private val crashReporter: CrashReporter,
 ) : BaseViewModel<LoginSignupState, LoginSignupEvent, LoginSignupAction>(
@@ -214,6 +285,7 @@ internal class LoginSignupViewModel(
     private var loginJob: Job? = null
     private var signupJob: Job? = null
     private var biometricJob: Job? = null
+    private var demoJob: Job? = null
     private var hasAutoPromptedBiometric = false
 
     init {
@@ -242,10 +314,16 @@ internal class LoginSignupViewModel(
             LoginSignupAction.OnCreateGroupTap -> handleCreateGroupTap()
             LoginSignupAction.OnJoinWithCodeTap -> handleJoinWithCodeTap()
             LoginSignupAction.OnForgotPassword -> handleForgotPassword()
+            LoginSignupAction.OnAcceptInvitationTap -> handleAcceptInvitationTap()
+            LoginSignupAction.OnDemoExplore -> handleDemoExplore()
+            LoginSignupAction.OnDemoConfirm -> handleDemoConfirm()
+            LoginSignupAction.OnDemoCancel -> handleDemoCancel()
             is LoginSignupAction.Internal.SessionChecked -> handleSessionChecked(action.session)
             is LoginSignupAction.Internal.LoginResult -> handleLoginResult(action.result)
             is LoginSignupAction.Internal.SignupResult -> handleSignupResult(action.result)
             is LoginSignupAction.Internal.BiometricResult -> handleBiometricResult(action.result)
+            is LoginSignupAction.Internal.SetPendingInviteCode -> handleSetPendingInviteCode(action.code)
+            is LoginSignupAction.Internal.DemoSeedResult -> handleDemoSeedResult(action.result)
         }
     }
 
@@ -262,6 +340,7 @@ internal class LoginSignupViewModel(
                 name = "",
                 emailPhone = "",
                 password = "",
+                passwordRequirements = PasswordRequirements(),
                 validationErrors = emptyMap(),
                 error = null,
             )
@@ -282,7 +361,11 @@ internal class LoginSignupViewModel(
 
     private fun handlePasswordChange(value: String) {
         updateState {
-            copy(password = value, validationErrors = validationErrors - "password")
+            copy(
+                password = value,
+                passwordRequirements = evaluatePasswordRequirements(value),
+                validationErrors = validationErrors - "password",
+            )
         }
     }
 
@@ -307,6 +390,12 @@ internal class LoginSignupViewModel(
             return
         }
 
+        // A fresh password login navigates to the landing screen on success by itself. Consume the
+        // biometric auto-prompt here so the post-login `currentSession` emission does NOT also fire
+        // PromptBiometric → refreshSession → a SECOND navigation. That double-navigation spawned a
+        // duplicate dashboard instance whose data stream raced/was cancelled, leaving the visible
+        // screen stuck on the skeleton while the first instance had already loaded Content.
+        hasAutoPromptedBiometric = true
         loginJob?.cancel()
         loginJob = viewModelScope.launch {
             updateState {
@@ -335,6 +424,9 @@ internal class LoginSignupViewModel(
             return
         }
 
+        // Fresh signup navigates on success itself — consume the biometric auto-prompt so the
+        // post-signup currentSession emission does not fire a second, duplicate navigation.
+        hasAutoPromptedBiometric = true
         signupJob?.cancel()
         signupJob = viewModelScope.launch {
             updateState {
@@ -387,7 +479,48 @@ internal class LoginSignupViewModel(
     private fun handleJoinWithCodeTap() {
         analytics.trackGroupOperation(operation = "join")
         Logger.i(TAG) { "zero_groups: join-with-code tapped" }
-        sendEvent(LoginSignupEvent.NavigateToJoinWithCode)
+        // Zero-groups Join tap carries no code — the user types it on join-with-code.
+        sendEvent(LoginSignupEvent.NavigateToJoinWithCode(inviteCode = null))
+    }
+
+    // -- Pre-auth accept-invitation (ui.yaml effect: navigate, F2/B4/G2) ------------------------
+
+    private fun handleAcceptInvitationTap() {
+        analytics.trackGroupOperation(operation = "join")
+        Logger.i(TAG) { "accept-invitation (pre-auth) tapped" }
+        // First-class pre-auth entry: navigate to join-with-code with NO pre-filled code; that
+        // screen routes back with pendingInviteCode which on_login/on_signup resumes (TC-LS-010).
+        sendEvent(LoginSignupEvent.NavigateToJoinWithCode(inviteCode = null))
+    }
+
+    // -- Demo Explore offline guest session (ui.yaml#demo_confirm_dialog, F1/B1/G1) --------------
+
+    private fun handleDemoExplore() {
+        Logger.i(TAG) { "demo-explore tapped — opening confirm dialog" }
+        updateState { copy(showDemoDialog = true) }
+    }
+
+    private fun handleDemoCancel() {
+        Logger.i(TAG) { "demo-explore dialog dismissed" }
+        updateState { copy(showDemoDialog = false) }
+    }
+
+    private fun handleDemoConfirm() {
+        // Demo entry navigates on seed success itself — consume the biometric auto-prompt.
+        hasAutoPromptedBiometric = true
+        demoJob?.cancel()
+        demoJob = viewModelScope.launch {
+            // Close the dialog and enter the seeding state; the offline fixture hydrates via
+            // DemoSessionManager — no network, no companion API (flow.yaml#on_demo_confirm).
+            updateState { copy(showDemoDialog = false, isSeedingDemo = true, error = null) }
+            val result = demoSessionManager.startDemoSession()
+            trySendAction(LoginSignupAction.Internal.DemoSeedResult(result))
+        }
+    }
+
+    private fun handleSetPendingInviteCode(code: String?) {
+        Logger.i(TAG) { "pendingInviteCode set present=${code != null}" }
+        updateState { copy(pendingInviteCode = code) }
     }
 
     // -- Forgot password (ui.yaml effect: emit_event) -------------------------------------------
@@ -432,11 +565,13 @@ internal class LoginSignupViewModel(
                         sessionToken = session.sessionToken,
                         groupMemberships = session.groupMemberships,
                         password = "",
+                        passwordRequirements = PasswordRequirements(),
                         screenState = screenStateFor(session.groupMemberships),
                         error = null,
                     )
                 }
-                routeEvent(session.groupMemberships)?.let(::sendEvent)
+                // Pre-auth invite resume takes precedence over the default landing (TC-LS-010).
+                (pendingInviteResumeEvent() ?: routeEvent(session.groupMemberships))?.let(::sendEvent)
             }
             is NetworkResult.Error -> {
                 val mapped = result.error.toLoginSignupError(AuthErrorContext.Login)
@@ -465,11 +600,13 @@ internal class LoginSignupViewModel(
                         groupMemberships = session.groupMemberships,
                         name = "",
                         password = "",
+                        passwordRequirements = PasswordRequirements(),
                         screenState = screenStateFor(session.groupMemberships),
                         error = null,
                     )
                 }
-                routeEvent(session.groupMemberships)?.let(::sendEvent)
+                // Pre-auth invite resume takes precedence over the default landing (TC-LS-010).
+                (pendingInviteResumeEvent() ?: routeEvent(session.groupMemberships))?.let(::sendEvent)
             }
             is NetworkResult.Error -> {
                 val mapped = result.error.toLoginSignupError(AuthErrorContext.Signup)
@@ -518,7 +655,46 @@ internal class LoginSignupViewModel(
         }
     }
 
+    private fun handleDemoSeedResult(result: Result<DemoSession>) {
+        result.fold(
+            onSuccess = { demo ->
+                Logger.i(TAG) { "demo session seeded userId=${demo.userId} — landing on organizer dashboard" }
+                updateState { copy(isSeedingDemo = false, error = null) }
+                // demo-explore-flow exit: land on the organizer-dashboard the seeded demo user owns.
+                sendEvent(LoginSignupEvent.NavigateToOrganizerDashboard)
+            },
+            onFailure = { t ->
+                crashReporter.recordMessage(
+                    message = "login-signup: demo seed failed ${t.message}",
+                    level = CrashSeverity.Warning,
+                )
+                updateState {
+                    copy(
+                        isSeedingDemo = false,
+                        screenState = LoginSignupScreenState.Error,
+                        error = LoginSignupError.Server,
+                    )
+                }
+            },
+        )
+    }
+
     // -- Helpers ----------------------------------------------------------------------------------
+
+    /**
+     * F3/F4 invite-resume handoff (TC-LS-010): when a valid 6-char [LoginSignupState.pendingInviteCode]
+     * was carried pre-auth from join-with-code, an authenticated success resumes the join
+     * (`NavigateToJoinWithCode(code)`) instead of the default membership-based landing. Returns the
+     * resume event, or null when there is no pending invite (caller falls back to [routeEvent]).
+     */
+    private fun pendingInviteResumeEvent(): LoginSignupEvent.NavigateToJoinWithCode? {
+        val pending = state.pendingInviteCode
+        return if (pending != null && pending.length == PENDING_INVITE_CODE_LENGTH) {
+            LoginSignupEvent.NavigateToJoinWithCode(inviteCode = pending)
+        } else {
+            null
+        }
+    }
 
     private fun screenStateFor(memberships: List<GroupMembership>): LoginSignupScreenState =
         if (memberships.isEmpty()) LoginSignupScreenState.ZeroGroups else LoginSignupScreenState.Content
@@ -538,6 +714,7 @@ internal class LoginSignupViewModel(
 
     private companion object {
         const val PIN_MAX_LENGTH = 4
+        const val PENDING_INVITE_CODE_LENGTH = 6
     }
 }
 
@@ -587,6 +764,22 @@ private fun validateName(name: String): String? =
 
 private fun validateEmailPhone(value: String): String? =
     if (value.isBlank() || !isValidEmailOrPhone(value)) "error_email_phone_invalid" else null
+
+/**
+ * Pure per-rule evaluation of the signup password against the Fineract password policy, surfaced
+ * live via the requirement chips. An empty password yields an all-`false` verdict so no chip lights
+ * up before the user types. See [PasswordRequirements].
+ */
+internal fun evaluatePasswordRequirements(password: String): PasswordRequirements {
+    if (password.isEmpty()) return PasswordRequirements()
+    return PasswordRequirements(
+        hasMinLength = password.length >= STRONG_PASSWORD_MIN_LENGTH,
+        hasMixedCase = password.any { it.isUpperCase() } && password.any { it.isLowerCase() },
+        hasDigit = password.any { it.isDigit() },
+        hasSymbol = password.any { !it.isLetterOrDigit() },
+        hasNoRepeats = password.zipWithNext().none { (a, b) -> a == b },
+    )
+}
 
 /** `requireStrong` gates the signup-only min-8-length strength check per ui.yaml#password_field. */
 private fun validatePassword(password: String, requireStrong: Boolean): String? = when {

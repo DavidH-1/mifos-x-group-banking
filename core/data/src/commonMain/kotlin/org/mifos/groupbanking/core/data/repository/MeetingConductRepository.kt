@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.data.repository
 
@@ -37,10 +37,12 @@ interface MeetingConductRepository {
      * `get_group_corpus` (404 → 0) + `get_active_loans` (404 → empty). Only a members-read failure
      * is fatal; the tolerant reads degrade to their empty/zero defaults.
      *
-     * **`pendingLoanApplications` gap (flagged, RULE-IMPLEMENT-CROSS-FEATURE-FIT-001 CFF1):**
-     * `ui.yaml#state_model` declares a `pendingLoanApplications` field but `api.yaml` names NO
-     * endpoint that loads it — [MeetingConductData.pendingLoanApplications] defaults to empty until
-     * a `get_pending_loan_applications` endpoint is added to the idea-layer.
+     * **`pendingLoanApplications` (CFF1 gap CLOSED):** now loaded as a 5th tolerant parallel read
+     * via `MeetingConductApi.getPendingLoanApplications` (companion
+     * `GET /companion/groups/{groupId}/loan-requests`) — the group's PENDING loan requests for the
+     * step-5 review. A failure/404 degrades to empty (never blocks the wizard). Approving one and
+     * submitting the meeting materialises it into a live Fineract loan via
+     * `postLoanDisbursal` → companion `POST /companion/loan-applications/{clientId}/disburse`.
      */
     suspend fun loadMeetingData(
         centerId: Int,

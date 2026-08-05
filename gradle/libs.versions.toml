@@ -4,11 +4,11 @@ kmpProductFlavors = "2.8.3"
 
 # ── Fork Identity — edit ONLY these 6 lines, then run ./gradlew syncForkConfig ──────────────────
 appId            = "org.mifos.groupbanking"
-appDisplayName   = "CommonPurse"
-baseNamespace    = "org.mifos"
-desktopAppName   = "Mifos - Money Toolkit"     # JVM package name, dock name
+appDisplayName   = "MifosSave"
+baseNamespace    = "kpt"
+desktopAppName   = "MifosSave"     # JVM package name, dock name
 projectName      = "mifos-x-group-banking"
-iosTeamId        = "XXXXXXXXXX"
+iosTeamId        = "L432S2FZP5"
 # ─────────────────────────────────────────────────────────────────────────────────────────────────
 # Android
 androidDesugarJdkLibs = "2.1.5"
@@ -103,7 +103,7 @@ koinAnnotationsVersion = "4.2.2"
 
 
 # KMP Toolkit Libraries
-kmptoolkit = "3.5.3"
+kmptoolkit = "3.5.9"
 
 # CMP Libraries
 compose-plugin = "1.11.1"
@@ -144,7 +144,7 @@ sqliteWeb = "2.7.0"
 # worker-kmp — single-API background + foreground worker scheduling across
 # Android / iOS / Desktop / Web. See https://github.com/MobileByteLabs/worker-kmp.
 # Pin tracks last published release on Maven Central.
-worker-version = "4.0.4"
+worker-version = "4.0.6"
 # KMPNotifier — Kotlin Multiplatform local + push notifications (Android/iOS/Desktop/Web).
 kmpnotifier = "2.0.0"
 

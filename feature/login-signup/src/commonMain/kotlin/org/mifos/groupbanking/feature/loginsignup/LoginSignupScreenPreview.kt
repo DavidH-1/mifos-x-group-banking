@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.loginsignup
 
@@ -14,6 +14,7 @@ import kpt.core.designsystem.theme.KptTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameter
 import org.jetbrains.compose.ui.tooling.preview.PreviewParameterProvider
+import org.mifos.groupbanking.feature.loginsignup.components.DemoExploreConfirmDialog
 
 /**
  * `@Preview` gallery for `LoginSignupScreen.kt`. See API.md#preview. Data source: `demo-data.yaml`
@@ -112,8 +113,43 @@ private fun AuthFormSectionSignupErrorPreview() {
 
 @Preview
 @Composable
+private fun AuthFormSectionSignupPasswordChipsPreview() {
+    KptTheme {
+        AuthFormSection(
+            state = LoginSignupState(
+                mode = AuthMode.Signup,
+                name = "Amina Otieno",
+                emailPhone = "+254798765432",
+                password = "Savings26",
+                // Partially-satisfied verdict — length + no-repeats still failing.
+                passwordRequirements = evaluatePasswordRequirements("Savings26"),
+            ),
+            onAction = {},
+            isLoading = false,
+        )
+    }
+}
+
+@Preview
+@Composable
 private fun ZeroGroupsSectionPreview() {
     KptTheme {
         ZeroGroupsSection(onAction = {})
+    }
+}
+
+@Preview
+@Composable
+private fun DemoExploreConfirmDialogPreview() {
+    KptTheme {
+        DemoExploreConfirmDialog(isSeeding = false, onConfirm = {}, onCancel = {})
+    }
+}
+
+@Preview
+@Composable
+private fun DemoExploreConfirmDialogSeedingPreview() {
+    KptTheme {
+        DemoExploreConfirmDialog(isSeeding = true, onConfirm = {}, onCancel = {})
     }
 }

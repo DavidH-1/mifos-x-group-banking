@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.shareoutpreview
 
@@ -63,7 +63,6 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.mifos.groupbanking.core.model.GroupTypeConfig
 import org.mifos.groupbanking.core.model.MemberPayout
-import org.mifos.groupbanking.core.model.ShareOutPreview
 import org.mifos.groupbanking.feature.shareoutpreview.generated.resources.Res
 import org.mifos.groupbanking.feature.shareoutpreview.generated.resources.screens_share_out_preview_a11y_confirm_button
 import org.mifos.groupbanking.feature.shareoutpreview.generated.resources.screens_share_out_preview_a11y_error_state
@@ -122,6 +121,7 @@ internal fun ShareOutPreviewScreen(
         typeConfig: GroupTypeConfig,
         totalPool: Double,
         memberPayouts: List<MemberPayout>,
+        cycleNumber: Int,
     ) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -142,7 +142,7 @@ internal fun ShareOutPreviewScreen(
     EventsEffect(viewModel) { event ->
         when (event) {
             is ShareOutPreviewEvent.NavigateToShareOutExecute ->
-                onNavigateToShareOutExecute(event.groupId, event.typeConfig, event.totalPool, event.memberPayouts)
+                onNavigateToShareOutExecute(event.groupId, event.typeConfig, event.totalPool, event.memberPayouts, event.cycleNumber)
 
             ShareOutPreviewEvent.NavigateBack -> onNavigateBack()
 
@@ -405,7 +405,7 @@ private fun FormulaChip(shareoutFormula: String, modifier: Modifier = Modifier) 
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.tertiaryContainer)
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = sp.md, vertical = sp.xs)
             .semantics { contentDescription = chipCd }
             .testTag(ShareOutPreviewTestTags.FORMULA_CHIP),
     )

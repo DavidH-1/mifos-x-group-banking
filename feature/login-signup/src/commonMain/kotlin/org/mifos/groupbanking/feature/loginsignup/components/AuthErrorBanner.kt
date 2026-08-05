@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.loginsignup.components
 
@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import kpt.core.designsystem.theme.spacing
 import org.jetbrains.compose.resources.stringResource
 import org.mifos.groupbanking.feature.loginsignup.LoginSignupTestTags
 import org.mifos.groupbanking.feature.loginsignup.generated.resources.Res
@@ -43,9 +44,9 @@ fun AuthErrorBanner(message: String, modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxWidth().testTag(LoginSignupTestTags.ERROR_BANNER),
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(MaterialTheme.spacing.md),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
         ) {
             Icon(
                 imageVector = Icons.Filled.ErrorOutline,

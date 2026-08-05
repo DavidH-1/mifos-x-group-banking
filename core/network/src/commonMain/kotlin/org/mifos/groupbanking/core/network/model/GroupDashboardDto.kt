@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.network.model
 
@@ -112,14 +112,23 @@ data class GroupInstanceConfigDto(
  */
 @Serializable(with = GroupContributionModelDto.Serializer::class)
 enum class GroupContributionModelDto {
-    @SerialName("FIXED_AMOUNT") FIXED_AMOUNT,
-    @SerialName("SHARE_BASED_VARIABLE") SHARE_BASED_VARIABLE,
-    @SerialName("FIXED_NEGOTIATED") FIXED_NEGOTIATED,
-    @SerialName("UNKNOWN") UNKNOWN,
+    @SerialName("FIXED_AMOUNT")
+    FIXED_AMOUNT,
+
+    @SerialName("SHARE_BASED_VARIABLE")
+    SHARE_BASED_VARIABLE,
+
+    @SerialName("FIXED_NEGOTIATED")
+    FIXED_NEGOTIATED,
+
+    @SerialName("UNKNOWN")
+    UNKNOWN,
     ;
 
     internal object Serializer : KSerializer<GroupContributionModelDto> by unknownFallbackEnumSerializer(
-        "GroupContributionModelDto", entries, UNKNOWN,
+        "GroupContributionModelDto",
+        entries,
+        UNKNOWN,
     )
 }
 
@@ -155,6 +164,11 @@ data class GroupCorpusDto(
     @SerialName("totalContributionsThisCycle") val totalContributionsThisCycle: Double,
     @SerialName("totalLoansOutstanding") val totalLoansOutstanding: Double,
     @SerialName("lastUpdated") val lastUpdated: String,
+    // Server-computed cycle-end flag (`api.yaml#get_group_corpus.response.isCycleEnd`) — true when
+    // the group's savings cycle has reached its end and Share-Out is available. Defaults `false` so
+    // an older server response without the field decodes to the conservative (Share-Out-blocked)
+    // value rather than failing to parse.
+    @SerialName("isCycleEnd") val isCycleEnd: Boolean = false,
     @SerialName("rotationPosition") val rotationPosition: Int? = null,
     @SerialName("nextRecipientName") val nextRecipientName: String? = null,
     @SerialName("nextRecipientPosition") val nextRecipientPosition: Int? = null,
@@ -191,12 +205,23 @@ data class ActivityItemDto(
  */
 @Serializable
 enum class ActivityTypeDto {
-    @SerialName("MEETING") MEETING,
-    @SerialName("DEPOSIT") DEPOSIT,
-    @SerialName("LOAN") LOAN,
-    @SerialName("PENALTY") PENALTY,
-    @SerialName("SHARE_OUT") SHARE_OUT,
-    @SerialName("UNKNOWN") UNKNOWN,
+    @SerialName("MEETING")
+    MEETING,
+
+    @SerialName("DEPOSIT")
+    DEPOSIT,
+
+    @SerialName("LOAN")
+    LOAN,
+
+    @SerialName("PENALTY")
+    PENALTY,
+
+    @SerialName("SHARE_OUT")
+    SHARE_OUT,
+
+    @SerialName("UNKNOWN")
+    UNKNOWN,
 }
 
 /**

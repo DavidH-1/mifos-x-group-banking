@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.database.groupdashboard.entity
 
@@ -100,6 +100,9 @@ data class CachedGroupCorpus(
     val totalContributionsThisCycle: Double,
     val totalLoansOutstanding: Double,
     val lastUpdated: String,
+    // Defaulted so an older cached JSON blob (written before this field existed) still decodes —
+    // Json.ignoreUnknownKeys covers extra keys, this default covers the missing-key direction.
+    val isCycleEnd: Boolean = false,
     val rotationPosition: Int?,
     val nextRecipientName: String?,
     val nextRecipientPosition: Int?,

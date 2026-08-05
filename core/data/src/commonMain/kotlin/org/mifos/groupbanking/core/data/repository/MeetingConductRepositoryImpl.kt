@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.data.repository
 
@@ -24,6 +24,7 @@ import org.mifos.groupbanking.core.network.mapper.toDomainModel
 import org.mifos.groupbanking.core.network.mapper.toDto
 import org.mifos.groupbanking.core.network.mapper.toGroupMembers
 import org.mifos.groupbanking.core.network.mapper.toJsonPayload
+import org.mifos.groupbanking.core.network.mapper.toLoanApplications
 import org.mifos.groupbanking.core.network.mapper.toLoanSummaries
 import org.mifos.groupbanking.core.network.mapper.toRecordDto
 import org.mifos.groupbanking.core.network.service.meetingconduct.MeetingConductApi
@@ -56,11 +57,13 @@ class MeetingConductRepositoryImpl(
         val membersDeferred = async { api.getGroupMembers(centerId) }
         val corpusDeferred = async { api.getGroupCorpus(centerId) }
         val loansDeferred = async { api.getActiveLoans(groupId) }
+        val pendingAppsDeferred = async { api.getPendingLoanApplications(groupId) }
 
         val previousResult = previousDeferred.await()
         val membersResult = membersDeferred.await()
         val corpusResult = corpusDeferred.await()
         val loansResult = loansDeferred.await()
+        val pendingAppsResult = pendingAppsDeferred.await()
 
         // Members are the only hard-required read — a members failure blocks the wizard
         // (api.yaml#get_group_members: 404 → members required).
@@ -75,6 +78,9 @@ class MeetingConductRepositoryImpl(
         val members = (membersResult as NetworkResult.Success).data.toGroupMembers()
         val corpus = (corpusResult as? NetworkResult.Success)?.data
         val activeLoans = (loansResult as? NetworkResult.Success)?.data?.toLoanSummaries().orEmpty()
+        // Tolerant read (companion GET /companion/groups/{groupId}/loan-requests) — a failure/404
+        // degrades to no pending applications rather than blocking the wizard.
+        val pendingApplications = (pendingAppsResult as? NetworkResult.Success)?.data?.toLoanApplications().orEmpty()
 
         val data = MeetingConductData(
             previousMeetingSummary = previousSummary,
@@ -82,13 +88,13 @@ class MeetingConductRepositoryImpl(
             openingCorpus = corpus?.corpusBalance ?: 0L,
             cashOnHand = corpus?.cashOnHand ?: 0L,
             activeLoans = activeLoans,
-            // pendingLoanApplications gap (CFF1) — no api.yaml endpoint loads it; see interface KDoc.
-            pendingLoanApplications = emptyList(),
+            // CFF1 gap closed — loaded from the companion group loan-requests facade.
+            pendingLoanApplications = pendingApplications,
         )
         Logger.i(TAG) {
             "loadMeetingData: succeeded centerId=$centerId members=${members.size} " +
                 "openingCorpus=${data.openingCorpus} activeLoans=${activeLoans.size} " +
-                "hasPrevious=${previousSummary != null}"
+                "pendingApplications=${pendingApplications.size} hasPrevious=${previousSummary != null}"
         }
         NetworkResult.Success(data)
     }
@@ -118,49 +124,46 @@ class MeetingConductRepositoryImpl(
                 "savings=${request.savings.size} repayments=${request.repayments.size} disbursals=${request.disbursals.size}"
         }
 
-        // Priority 1 — meeting record.
-        api.postMeetingRecord(request.toRecordDto()).errorOrNull()?.let {
-            Logger.e(TAG) { "submitMeeting: postMeetingRecord failed: $it" }
-            return NetworkResult.Error(it)
-        }
-
-        // Priority 2 — per-member attendance.
-        for (attendance in request.attendance) {
-            api.postMeetingAttendance(attendance.toDto(request.meetingId)).errorOrNull()?.let {
-                Logger.e(TAG) { "submitMeeting: postMeetingAttendance failed memberId=${attendance.memberId}: $it" }
-                return NetworkResult.Error(it)
+        // Ordered, lazily-evaluated write steps (Priority 1 record → 2 attendance → 3 savings →
+        // 4 repayments → 5 disbursals → 6 corpus PATCH). `firstNotNullOfOrNull` runs them in order
+        // and stops at the FIRST failure — the same sequential short-circuit as before, now with a
+        // single Error/Success return pair. Each step logs its own failure before surfacing it.
+        val steps: List<suspend () -> NetworkError?> = buildList {
+            add {
+                api.postMeetingRecord(request.toRecordDto()).errorOrNull()
+                    ?.also { Logger.e(TAG) { "submitMeeting: postMeetingRecord failed: $it" } }
+            }
+            request.attendance.forEach { attendance ->
+                add {
+                    api.postMeetingAttendance(attendance.toDto(request.meetingId)).errorOrNull()
+                        ?.also { Logger.e(TAG) { "submitMeeting: postMeetingAttendance failed memberId=${attendance.memberId}: $it" } }
+                }
+            }
+            request.savings.forEach { savings ->
+                add {
+                    api.postSavingsTransaction(savings.savingsAccountId, savings.toDto(request.actualDate)).errorOrNull()
+                        ?.also { Logger.e(TAG) { "submitMeeting: postSavingsTransaction failed savingsId=${savings.savingsAccountId}: $it" } }
+                }
+            }
+            request.repayments.forEach { repayment ->
+                add {
+                    api.postLoanRepayment(repayment.loanId, repayment.toDto(request.actualDate)).errorOrNull()
+                        ?.also { Logger.e(TAG) { "submitMeeting: postLoanRepayment failed loanId=${repayment.loanId}: $it" } }
+                }
+            }
+            request.disbursals.forEach { disbursal ->
+                add {
+                    api.postLoanDisbursal(disbursal.loanId, disbursal.toDisbursalDto(request.actualDate)).errorOrNull()
+                        ?.also { Logger.e(TAG) { "submitMeeting: postLoanDisbursal failed loanId=${disbursal.loanId}: $it" } }
+                }
+            }
+            add {
+                api.updateCorpus(request.centerId, request.toCorpusUpdateDto()).errorOrNull()
+                    ?.also { Logger.e(TAG) { "submitMeeting: updateCorpus failed: $it" } }
             }
         }
 
-        // Priority 3 — per-entry savings deposits.
-        for (savings in request.savings) {
-            api.postSavingsTransaction(savings.savingsAccountId, savings.toDto(request.actualDate)).errorOrNull()?.let {
-                Logger.e(TAG) { "submitMeeting: postSavingsTransaction failed savingsId=${savings.savingsAccountId}: $it" }
-                return NetworkResult.Error(it)
-            }
-        }
-
-        // Priority 4 — per-loan repayments.
-        for (repayment in request.repayments) {
-            api.postLoanRepayment(repayment.loanId, repayment.toDto(request.actualDate)).errorOrNull()?.let {
-                Logger.e(TAG) { "submitMeeting: postLoanRepayment failed loanId=${repayment.loanId}: $it" }
-                return NetworkResult.Error(it)
-            }
-        }
-
-        // Priority 5 — per-approved disbursals (corpus-gated in the ViewModel before this call).
-        for (disbursal in request.disbursals) {
-            api.postLoanDisbursal(disbursal.loanId, disbursal.toDisbursalDto(request.actualDate)).errorOrNull()?.let {
-                Logger.e(TAG) { "submitMeeting: postLoanDisbursal failed loanId=${disbursal.loanId}: $it" }
-                return NetworkResult.Error(it)
-            }
-        }
-
-        // Priority 6 — terminal corpus PATCH.
-        api.updateCorpus(request.centerId, request.toCorpusUpdateDto()).errorOrNull()?.let {
-            Logger.e(TAG) { "submitMeeting: updateCorpus failed: $it" }
-            return NetworkResult.Error(it)
-        }
+        steps.firstNotNullOfOrNull { it() }?.let { return NetworkResult.Error(it) }
 
         Logger.i(TAG) { "submitMeeting: succeeded meetingId=${request.meetingId} (all 6 priorities posted)" }
         return NetworkResult.Success(MeetingSubmitResult(meetingId = request.meetingId, isOffline = false))

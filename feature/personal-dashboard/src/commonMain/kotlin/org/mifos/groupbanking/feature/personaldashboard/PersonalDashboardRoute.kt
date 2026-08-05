@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.personaldashboard
 
@@ -32,26 +32,39 @@ fun NavController.navigateToPersonalDashboard(navOptions: NavOptions? = null) =
  * (RULE-PROTO-COMPOSE-DEAD-CLICK-001 DC3):
  *
  * - [onNavigateToSavings] closes [PersonalDashboardEvent.NavigateToSavings]
- *   (`flow.yaml#navigates_to: savings-dashboard`, `ui.yaml#components.savings_summary_card
- *   .on_click.target: personal-savings`) — a typed nav-arg contract (`groupId` + `poolModel`) for
- *   the caller to wire once that feature module is generated, mirroring `GroupListRoute`'s
- *   not-yet-generated-target convention.
+ *   (`ui.yaml#components.savings_summary_card.on_click.target: personal-savings`) — a typed nav-arg
+ *   contract carrying the three `personal-savings` nav_params (`clientId`, `groupLinkedSavingsId`,
+ *   optional `individualSavingsId`) + `poolModel`, wired to the real `personal-savings` feature
+ *   module in `GroupBankingNavHost`.
  * - [onNavigateToGroupList] closes [PersonalDashboardEvent.NavigateToGroupList]
  *   (`flow.yaml#navigates_to: group-list`) — currently unreachable from any wired `on_click` on
  *   this screen's canvas (see [PersonalDashboardViewModel] class KDoc "Idea-layer gap" note); the
  *   callback is still exposed here so the host wiring compiles and is ready the moment an
  *   idea-layer update adds the missing affordance.
+ * - [onNavigateToLoans] closes [PersonalDashboardEvent.NavigateToLoans]
+ *   (`ui.yaml#components.loan_card.on_click.target: personal-loans`) — carries the member's
+ *   `clientId` (the `personal-loans` nav_param) to the loans list. The un-deferred loan entry card.
+ * - [onNavigateToSettings] / [onNavigateToSyncStatus] close
+ *   [PersonalDashboardEvent.NavigateToSettings] / [PersonalDashboardEvent.NavigateToSyncStatus]
+ *   (`ui.yaml#components.top_bar.overflow_menu`) — the profile/overflow-menu entry points to the
+ *   shared `settings` + `sync-status` screens.
  *
  * See API.md#route.
  */
 fun NavGraphBuilder.personalDashboardScreen(
-    onNavigateToSavings: (groupId: String, poolModel: String) -> Unit,
+    onNavigateToSavings: (clientId: Long, groupLinkedSavingsId: Long, individualSavingsId: Long?, poolModel: String) -> Unit,
     onNavigateToGroupList: () -> Unit,
+    onNavigateToLoans: (clientId: Long) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToSyncStatus: () -> Unit,
 ) {
     composableWithRootPushTransitions<PersonalDashboardRoute> {
         PersonalDashboardScreen(
             onNavigateToSavings = onNavigateToSavings,
             onNavigateToGroupList = onNavigateToGroupList,
+            onNavigateToLoans = onNavigateToLoans,
+            onNavigateToSettings = onNavigateToSettings,
+            onNavigateToSyncStatus = onNavigateToSyncStatus,
         )
     }
 }

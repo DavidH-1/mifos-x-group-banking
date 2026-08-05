@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.network.model
 
@@ -24,6 +24,7 @@ import kotlinx.serialization.Serializable
 /** `GET /datatables/dt_meeting_record/{centerId}` — previous meeting summary row (`get_previous_meeting_record`). */
 @Serializable
 data class MeetingRecordDetailDto(
+    @SerialName("meetingId") val meetingId: String = "",
     @SerialName("meetingNumber") val meetingNumber: Int = 0,
     @SerialName("actualDate") val actualDate: String = "",
     @SerialName("totalSavings") val totalSavings: Long = 0L,
@@ -145,13 +146,37 @@ data class LoanRepaymentRequestDto(
     val dateFormat: String = "dd MMMM yyyy",
 )
 
-/** `POST /loans/{loanId}/transactions?command=disburse` (`post_loan_disbursal`, priority 5). */
+/**
+ * `POST /companion/loan-applications/{clientId}/disburse` (`post_loan_disbursal`, priority 5).
+ * The approve-then-materialise action: the companion reads the client's PENDING dt_loan_request,
+ * creates the Fineract loan from the KES VSLA product, approves + disburses it, and marks the
+ * request APPROVED. [amount] is the group-approved principal (defaults to the requested amount on
+ * the companion side when omitted/zero). Not a raw Fineract disburse — see the companion's
+ * `HandleDisburseLoanApplication` (a bare loan-transaction disburse can't materialise an
+ * application that has no Fineract loan yet).
+ */
 @Serializable
 data class LoanDisbursalRequestDto(
     val actualDisbursementDate: String,
+    val amount: Long = 0L,
     val note: String = "",
     val locale: String = "en",
     val dateFormat: String = "dd MMMM yyyy",
+)
+
+/**
+ * `GET /companion/groups/{groupId}/loan-requests` (`get_pending_loan_applications`) — one PENDING
+ * loan request projected to the meeting-conduct review step's [org.mifos.groupbanking.core.model.meeting.LoanApplication].
+ * [id] == the borrower's clientId (string), so the approve→disburse action resolves the client from
+ * the application id. Parsed with `ignoreUnknownKeys`.
+ */
+@Serializable
+data class MeetingLoanApplicationDto(
+    val id: String,
+    val memberId: String,
+    val memberName: String,
+    val requestedAmount: Long,
+    val purpose: String = "",
 )
 
 /** `PUT /datatables/dt_group_corpus/{centerId}` (`patch_corpus`, priority 6). */

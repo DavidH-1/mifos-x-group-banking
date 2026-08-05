@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.loanlist
 
@@ -89,11 +89,12 @@ import org.mifos.groupbanking.feature.loanlist.generated.resources.screens_loan_
 @Composable
 internal fun LoanListScreen(
     groupId: Long,
-    onNavigateToLoanDetail: (loanId: Long) -> Unit,
+    viewerRole: String,
+    onNavigateToLoanDetail: (loanId: Long, viewerRole: String) -> Unit,
     onNavigateToLoanApply: (groupId: Long) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: LoanListViewModel = koinViewModel(parameters = { parametersOf(groupId) }),
+    viewModel: LoanListViewModel = koinViewModel(parameters = { parametersOf(groupId, viewerRole) }),
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -104,7 +105,7 @@ internal fun LoanListScreen(
 
     EventsEffect(viewModel) { event ->
         when (event) {
-            is LoanListEvent.NavigateToLoanDetail -> onNavigateToLoanDetail(event.loanId)
+            is LoanListEvent.NavigateToLoanDetail -> onNavigateToLoanDetail(event.loanId, viewerRole)
             is LoanListEvent.NavigateToLoanApply -> onNavigateToLoanApply(event.groupId)
             is LoanListEvent.ShowSnackbar -> {
                 val resolved = messageKeyToText(event.message, networkMessage, serverMessage, authMessage)
@@ -202,7 +203,9 @@ internal fun LoanListFabContent(fabCd: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs),
-        modifier = Modifier.semantics { contentDescription = fabCd },
+        modifier = Modifier
+            .testTag(LoanListTestTags.FAB_APPLY)
+            .semantics { contentDescription = fabCd },
     ) {
         Icon(imageVector = Icons.Filled.Add, contentDescription = null)
         Text(text = stringResource(Res.string.screens_loan_list_action_apply))

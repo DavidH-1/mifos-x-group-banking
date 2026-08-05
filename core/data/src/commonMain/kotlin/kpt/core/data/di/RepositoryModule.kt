@@ -25,19 +25,21 @@ import kpt.core.database.AppDatabase
 import kpt.core.database.di.DatabaseModule
 import kpt.core.datastore.di.DatastoreModule
 import kpt.core.network.di.NetworkModule
+import kpt.core.store.AppStoreRegistry
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import kpt.core.store.AppStoreRegistry
+import org.mifos.groupbanking.core.data.demo.DemoSessionManager
+import org.mifos.groupbanking.core.data.demo.DemoSessionManagerImpl
 import org.mifos.groupbanking.core.data.repository.AuthRepository
 import org.mifos.groupbanking.core.data.repository.AuthRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.ChangePinRepository
 import org.mifos.groupbanking.core.data.repository.ChangePinRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.GroupCreateRepository
-import org.mifos.groupbanking.core.data.repository.GroupCreateRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.FieldOfficerDashboardRepository
 import org.mifos.groupbanking.core.data.repository.FieldOfficerDashboardRepositoryImpl
+import org.mifos.groupbanking.core.data.repository.GroupCreateRepository
+import org.mifos.groupbanking.core.data.repository.GroupCreateRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.GroupDashboardRepository
 import org.mifos.groupbanking.core.data.repository.GroupDashboardRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.GroupRepository
@@ -58,12 +60,13 @@ import org.mifos.groupbanking.core.data.repository.LoanRequestRepository
 import org.mifos.groupbanking.core.data.repository.LoanRequestRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.LoanWriteoffRepository
 import org.mifos.groupbanking.core.data.repository.LoanWriteoffRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.MeetingSummaryRepository
-import org.mifos.groupbanking.core.data.repository.MeetingSummaryRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.PreviousMeetingReviewRepository
-import org.mifos.groupbanking.core.data.repository.PreviousMeetingReviewRepositoryImpl
+import org.mifos.groupbanking.core.data.repository.LocalCacheCleaner
 import org.mifos.groupbanking.core.data.repository.MeetingConductRepository
 import org.mifos.groupbanking.core.data.repository.MeetingConductRepositoryImpl
+import org.mifos.groupbanking.core.data.repository.MeetingRepository
+import org.mifos.groupbanking.core.data.repository.MeetingRepositoryImpl
+import org.mifos.groupbanking.core.data.repository.MeetingSummaryRepository
+import org.mifos.groupbanking.core.data.repository.MeetingSummaryRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.MemberAddRepository
 import org.mifos.groupbanking.core.data.repository.MemberAddRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.MemberDashboardRepository
@@ -72,12 +75,13 @@ import org.mifos.groupbanking.core.data.repository.MemberInviteRepository
 import org.mifos.groupbanking.core.data.repository.MemberInviteRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.MemberProfileRepository
 import org.mifos.groupbanking.core.data.repository.MemberProfileRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.OrganizerDashboardRepository
-import org.mifos.groupbanking.core.data.repository.OrganizerDashboardRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.MeetingRepository
-import org.mifos.groupbanking.core.data.repository.MeetingRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.MemberRepository
 import org.mifos.groupbanking.core.data.repository.MemberRepositoryImpl
+import org.mifos.groupbanking.core.data.repository.OrganizerDashboardRepository
+import org.mifos.groupbanking.core.data.repository.OrganizerDashboardRepositoryImpl
+import org.mifos.groupbanking.core.data.repository.PreviousMeetingReviewRepository
+import org.mifos.groupbanking.core.data.repository.PreviousMeetingReviewRepositoryImpl
+import org.mifos.groupbanking.core.data.repository.RoomLocalCacheCleaner
 import org.mifos.groupbanking.core.data.repository.SavingsRepository
 import org.mifos.groupbanking.core.data.repository.SavingsRepositoryImpl
 import org.mifos.groupbanking.core.data.repository.ShareOutRepository
@@ -95,7 +99,29 @@ val DataModule = module {
 
     // login-signup client stack (COMP-AUTH-001/002/003) — Store5-free (business_logic.kind:
     // processor), wraps CompanionAuthApi (NetworkModule) + CompanionSessionStore (DatastoreModule).
-    single<AuthRepository> { AuthRepositoryImpl(api = get(), sessionStore = get()) }
+    single<LocalCacheCleaner> { RoomLocalCacheCleaner(database = get<AppDatabase>()) }
+    single<AuthRepository> { AuthRepositoryImpl(api = get(), sessionStore = get(), cacheCleaner = get()) }
+
+    // login-signup Demo Explore offline guest session (ui.yaml#demo_confirm_dialog,
+    // flow.yaml#on_demo_confirm). Seeds the offline read caches the Demo-Explore mode browses —
+    // organizer-dashboard (landing) + group-list + group-dashboard + member-list + loan-list — from
+    // the bundled PROJECT_DEMO_DATA fixture, then persists a synthetic demo session. 100% offline,
+    // no companion API / Fineract. NOT seeded: savings-dashboard (its SavingsRepository is
+    // Store5-free / network-only — no Room SourceOfTruth to write). Not a Store5 read-store
+    // (business_logic.kind: processor) — a session-scoped seed manager, same branch as SyncManager /
+    // UserLogoutManager below. Depends on CompanionSessionStore (DatastoreModule) + the four read
+    // DAOs it seeds (DatabaseModule) + FetchedAtRepository (below).
+    single<DemoSessionManager> {
+        DemoSessionManagerImpl(
+            sessionStore = get(),
+            organizerDashboardDao = get<AppDatabase>().organizerDashboardDao,
+            groupListDao = get<AppDatabase>().groupListDao,
+            groupDashboardDao = get<AppDatabase>().groupDashboardDao,
+            memberListDao = get<AppDatabase>().memberListDao,
+            loanListDao = get<AppDatabase>().loanListDao,
+            fetchedAtRepository = get(),
+        )
+    }
 
     // group-type-picker seeded catalogue (COMP-DT-003) — wraps the NETWORK_WITH_CACHE
     // GroupTypeConfigStore (bound via AppStoreRegistry.GroupTypeConfig in appStoreModule) and
@@ -298,7 +324,7 @@ val DataModule = module {
     // (NetworkModule) directly. Surfaces NetworkResult, never .asScreenStream()/.write() — same
     // branch as InvitationRepository/MeetingConductRepository/LoanApplyRepository above. DISTINCT
     // from InvitationRepository (recipient-side join flow) — organizer-vs-recipient bounded context.
-    single<MemberInviteRepository> { MemberInviteRepositoryImpl(api = get()) }
+    single<MemberInviteRepository> { MemberInviteRepositoryImpl(api = get(), syncQueueRepository = get()) }
 
     // group-create wizard (COMP-GRP-001 + raw Fineract /offices) — Store5-free mutation
     // orchestration for createGroup (business_logic.kind: processor, no read-stream to cache),
@@ -307,14 +333,14 @@ val DataModule = module {
     // getOffices is pending a future kmp-store-gen OfficeStore for its declared
     // stale-while-revalidate cache_strategy (SC2) — see GroupCreateRepository KDoc; not
     // half-built here, this repo's getOffices is a plain pass-through today.
-    single<GroupCreateRepository> { GroupCreateRepositoryImpl(api = get()) }
+    single<GroupCreateRepository> { GroupCreateRepositoryImpl(api = get(), syncQueueRepository = get()) }
 
     // member-add create-chain (create_client -> assign_member_role -> optional upload_photo) —
     // Store5-free mutation orchestration (business_logic.kind: processor, offline-queue-backed,
     // no read-stream to cache), wraps MemberAddApi (NetworkModule) directly. Surfaces
     // NetworkResult, never .asScreenStream()/.write() — same branch as
     // AuthRepository/InvitationRepository/GroupCreateRepository above.
-    single<MemberAddRepository> { MemberAddRepositoryImpl(api = get()) }
+    single<MemberAddRepository> { MemberAddRepositoryImpl(api = get(), syncQueueRepository = get()) }
 
     // loan-apply form (get_group_members + 5-way parallel combine into LoanApplyTemplate +
     // create_new_loan submit) — Store5-free today (business_logic.kind: composite, no
@@ -403,6 +429,9 @@ val DataModule = module {
             meetingCalendarStore = get(AppStoreRegistry.MeetingCalendar),
             networkMonitor = get(),
             fetchedAtRepository = get(),
+            // G3 / F6: the schedule-editor RescheduleMeeting write is server-gated (companion
+            // companion_update_calendar pending), so it offline-queues via the shared SyncQueueRepository.
+            syncQueueRepository = get(),
         )
     }
 

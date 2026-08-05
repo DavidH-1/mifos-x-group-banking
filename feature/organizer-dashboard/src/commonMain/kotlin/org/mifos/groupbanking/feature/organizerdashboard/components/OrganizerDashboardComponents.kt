@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.organizerdashboard.components
 
@@ -52,16 +52,6 @@ import org.mifos.groupbanking.core.model.ScheduledMeeting
 // KPI summary cards — ui.yaml#components.kpi_summary_row (4 cards; share-out card error-accents
 // when its count > 0).
 // ---------------------------------------------------------------------------
-
-/** One KPI datum — value + label + icon + a flag driving the nonzero error accent. */
-internal data class OrganizerKpiCardData(
-    val value: String,
-    val label: String,
-    val icon: ImageVector,
-    val testTag: String,
-    val emphasizeNonZero: Boolean = false,
-    val nonZero: Boolean = false,
-)
 
 /**
  * One tappable KPI card (`ui.yaml#components.kpi_summary_row.*`). All four cards navigate to

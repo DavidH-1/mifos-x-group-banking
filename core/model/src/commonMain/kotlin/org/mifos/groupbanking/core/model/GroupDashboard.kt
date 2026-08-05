@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.model
 
@@ -146,6 +146,13 @@ data class GroupCorpus(
     val totalContributionsThisCycle: Double,
     val totalLoansOutstanding: Double,
     val lastUpdated: String,
+    /**
+     * Server-computed cycle-end flag (`get_group_corpus.isCycleEnd`) — true when the group's
+     * savings cycle has reached its end and Share-Out is available. Backs
+     * `GroupDashboardState.isCycleEnd` (the Share-Out action gate); replaces the legacy client-side
+     * `cycleWeek == cycleLengthWeeks` derivation whose fields never existed on the domain model.
+     */
+    val isCycleEnd: Boolean,
     val rotationPosition: Int?,
     val nextRecipientName: String?,
     val nextRecipientPosition: Int?,

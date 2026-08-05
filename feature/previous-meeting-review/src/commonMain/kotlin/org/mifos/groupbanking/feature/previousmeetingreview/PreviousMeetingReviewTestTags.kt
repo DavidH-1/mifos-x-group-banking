@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.previousmeetingreview
 
@@ -57,6 +57,9 @@ object PreviousMeetingReviewTestTags {
 
     /** Full-screen error surface — `PreviousMeetingReviewScreenState.Error`. */
     const val ERROR_SECTION: String = "previous_meeting_review_error_section"
+
+    /** "Not conducted yet" surface — Content whose record is the blank-date not-conducted snapshot. */
+    const val NOT_CONDUCTED_SECTION: String = "previous_meeting_review_not_conducted_section"
 
     /** Retry CTA on the error state — [PreviousMeetingReviewAction.Retry]. */
     const val ERROR_RETRY_BUTTON: String = "previous_meeting_review_error_retry_button"

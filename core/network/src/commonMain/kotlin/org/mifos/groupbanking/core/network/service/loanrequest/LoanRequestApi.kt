@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.network.service.loanrequest
 
@@ -45,4 +45,13 @@ interface LoanRequestApi {
      * responsible for routing a 503/offline outcome to `LoanRequestRepository.enqueueOffline`.
      */
     suspend fun submitLoanRequest(request: LoanRequestPayloadDto): NetworkResult<LoanRequestResponseDto, NetworkError>
+
+    /**
+     * `GET /clients/{clientId}/accounts` — the member's savings accounts, summed into the current
+     * savings balance that drives loan eligibility (max borrow = savings × loanMultiplier). Resolves
+     * the balance at mount because the upstream nav-param `savingsBalance` is not reliably populated
+     * by `personal-dashboard`/`personal-loans` (documented threading gap) — the loan-request screen
+     * fetches it directly instead of trusting a possibly-zero nav arg.
+     */
+    suspend fun getMemberSavingsBalance(clientId: Long): NetworkResult<Double, NetworkError>
 }

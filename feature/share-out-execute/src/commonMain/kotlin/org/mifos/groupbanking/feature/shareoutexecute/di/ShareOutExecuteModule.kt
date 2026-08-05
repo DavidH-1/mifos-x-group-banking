@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.shareoutexecute.di
 
@@ -42,6 +42,7 @@ val ShareOutExecuteModule = module {
             typeConfig = parameters.get<GroupTypeConfig>(),
             totalPool = parameters.get<Double>(),
             memberPayouts = parameters.get<List<MemberPayout>>(),
+            cycleNumber = parameters.get<Int>(),
         )
     }
 }

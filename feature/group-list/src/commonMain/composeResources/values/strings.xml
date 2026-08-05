@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Mifos Initiative
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+    If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+-->
 <resources>
     <string name="screens_group_list_title">My Groups</string>
     <string name="screens_group_list_loading_message">Loading your groups…</string>
@@ -6,12 +15,15 @@
     <string name="screens_group_list_search_hint">Search groups…</string>
     <string name="screens_group_list_search_icon_cd">Search</string>
     <string name="screens_group_list_search_clear_cd">Clear search</string>
-    <string name="screens_group_list_search_empty_message">No results for \'%1$s\'</string>
+    <string name="screens_group_list_search_empty_message">No results for '%1$s'</string>
 
     <string name="screens_group_list_cycle_label">Cycle %1$d</string>
     <string name="screens_group_list_member_count">%1$d members</string>
     <string name="screens_group_list_last_met">Last met: %1$s</string>
     <string name="screens_group_list_card_cd">%1$s, cycle %2$d, %3$d members, health %4$s</string>
+
+    <string name="screens_group_list_notifications_cd">Notifications</string>
+    <string name="screens_group_list_notifications_deferred">Notifications are coming in a later update.</string>
 
     <string name="screens_group_list_fab_cd">Create new savings group</string>
     <string name="screens_group_list_action_create">Create Group</string>

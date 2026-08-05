@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Mifos Initiative
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+    If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+-->
 <resources>
     <string name="screens_organizer_dashboard_top_bar_title">Dashboard</string>
     <string name="screens_organizer_dashboard_notifications_cd">Notifications</string>
+    <string name="screens_organizer_dashboard_more_options_cd">More options</string>
+    <string name="screens_organizer_dashboard_menu_settings">Settings</string>
+    <string name="screens_organizer_dashboard_menu_sync_status">Sync Status</string>
     <string name="screens_organizer_dashboard_notifications_deferred">Notifications centre is coming in a later release.</string>
     <string name="screens_organizer_dashboard_loading_message">Loading dashboard…</string>
 
     <string name="screens_organizer_dashboard_welcome_greeting">Welcome back, %1$s</string>
-    <string name="screens_organizer_dashboard_welcome_subtitle">Here\'s your overview for today</string>
+    <string name="screens_organizer_dashboard_welcome_subtitle">Here's your overview for today</string>
 
     <string name="screens_organizer_dashboard_kpi_my_groups">My Groups</string>
     <string name="screens_organizer_dashboard_kpi_members">Members</string>
@@ -20,7 +32,7 @@
     <string name="screens_organizer_dashboard_nav_field_officers_sub">Officer overview</string>
     <string name="screens_organizer_dashboard_badge_optional">Optional</string>
 
-    <string name="screens_organizer_dashboard_todays_schedule_label">Today\'s Schedule</string>
+    <string name="screens_organizer_dashboard_todays_schedule_label">Today's Schedule</string>
     <string name="screens_organizer_dashboard_schedule_count_chip">%1$d meetings</string>
     <string name="screens_organizer_dashboard_schedule_supporting">%1$s · %2$d members</string>
     <string name="screens_organizer_dashboard_no_meetings_today">No meetings scheduled for today</string>

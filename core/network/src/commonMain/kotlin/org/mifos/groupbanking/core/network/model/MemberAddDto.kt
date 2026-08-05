@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.network.model
 
@@ -49,6 +49,31 @@ data class CreateMemberRequestDto(
         const val SCHEMA_VERSION = 1
     }
 }
+
+/**
+ * FLATTENED offline-sync payload for the member-add create-chain — the fields of
+ * [CreateMemberRequestDto] plus the `role` + `assignedDate` that the (post-drain) role write needs.
+ * The ONLINE path chains two client-side calls (`POST /clients` -> `POST /datatables/dt_member_role/
+ * {clientId}`), which cannot be a single SyncQueue row because the role write depends on the
+ * clientId minted by the first call. So the OFFLINE path enqueues THIS single shape to the
+ * companion orchestration route `POST /companion/members` (`HandleCreateMember`), which performs
+ * the whole chain server-side on drain. `role` is the uppercase wire enum (`CHAIRPERSON`/…/`MEMBER`,
+ * matching [MemberRoleDto]'s `@SerialName`s).
+ */
+@Serializable
+data class MemberAddOfflinePayloadDto(
+    @SerialName("firstname") val firstname: String,
+    @SerialName("lastname") val lastname: String,
+    @SerialName("mobileNo") val mobileNo: String,
+    @SerialName("active") val active: Boolean,
+    @SerialName("activationDate") val activationDate: String,
+    @SerialName("officeId") val officeId: Long,
+    @SerialName("groupId") val groupId: Long,
+    @SerialName("locale") val locale: String,
+    @SerialName("dateFormat") val dateFormat: String,
+    @SerialName("role") val role: String,
+    @SerialName("assignedDate") val assignedDate: String,
+)
 
 /**
  * Wire response DTO for step 1 (`POST /clients`) — the newly created Fineract client's identity.

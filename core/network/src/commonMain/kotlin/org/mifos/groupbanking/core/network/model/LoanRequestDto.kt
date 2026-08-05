@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 @file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 
@@ -85,3 +85,26 @@ data class LoanRequestResponseDto(
         const val SCHEMA_VERSION = 1
     }
 }
+
+/**
+ * Minimal `GET /clients/{clientId}/accounts` shape read by loan-request to resolve the member's
+ * savings balance (the loan-eligibility input). Only the fields needed for the balance sum are
+ * declared; every other Fineract field is dropped by `ignoreUnknownKeys`. The companion enriches
+ * each savings account with `accountBalance` (Fineract's summary omits it) — see the companion's
+ * loan_products.go HandleClientAccounts.
+ */
+@Serializable
+data class ClientAccountsDto(
+    @SerialName("savingsAccounts") val savingsAccounts: List<ClientSavingsAccountDto> = emptyList(),
+)
+
+@Serializable
+data class ClientSavingsAccountDto(
+    @SerialName("accountBalance") val accountBalance: Double = 0.0,
+    @SerialName("status") val status: ClientSavingsStatusDto = ClientSavingsStatusDto(),
+)
+
+@Serializable
+data class ClientSavingsStatusDto(
+    @SerialName("active") val active: Boolean = false,
+)

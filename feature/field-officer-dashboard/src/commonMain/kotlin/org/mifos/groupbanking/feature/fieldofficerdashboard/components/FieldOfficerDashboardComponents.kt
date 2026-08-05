@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.fieldofficerdashboard.components
 
@@ -14,7 +14,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -56,15 +55,6 @@ import org.mifos.groupbanking.feature.fieldofficerdashboard.FieldOfficerDashboar
 // ---------------------------------------------------------------------------
 // KPI summary cards — ui.yaml#components.kpi_cards_row (4 cards, distinct MD3 container tokens)
 // ---------------------------------------------------------------------------
-
-/** One KPI datum — value string + label + icon + the MD3 container/onContainer color pair. */
-internal data class KpiCardData(
-    val value: String,
-    val label: String,
-    val icon: ImageVector,
-    val container: Color,
-    val onContainer: Color,
-)
 
 /**
  * Horizontally-scrollable row of 4 non-interactive KPI cards, each using its declared MD3 container

@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright 2026 Mifos Initiative
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+    If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+-->
 <resources>
     <string name="screens_savings_dashboard_screen_title">Savings</string>
 
@@ -24,7 +33,7 @@
     <string name="screens_savings_dashboard_total_individual_label">Total Individual Balances</string>
     <string name="screens_savings_dashboard_individual_total_amount_format">KES %1$s</string>
 
-    <string name="screens_savings_dashboard_avatar_cd_format">%1$s\'s avatar</string>
+    <string name="screens_savings_dashboard_avatar_cd_format">%1$s's avatar</string>
 
     <string name="screens_savings_dashboard_member_shares_format">%1$d shares @ KES %2$s/share</string>
     <string name="screens_savings_dashboard_member_meetings_format">%1$d meetings · Last: KES %2$s</string>

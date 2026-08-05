@@ -5,11 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.organizerdashboard
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,11 +22,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DashboardCustomize
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -78,6 +84,9 @@ import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.scr
 import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.screens_organizer_dashboard_kpi_my_groups
 import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.screens_organizer_dashboard_kpi_pending_shareout
 import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.screens_organizer_dashboard_loading_message
+import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.screens_organizer_dashboard_menu_settings
+import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.screens_organizer_dashboard_menu_sync_status
+import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.screens_organizer_dashboard_more_options_cd
 import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.screens_organizer_dashboard_nav_all_groups
 import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.screens_organizer_dashboard_nav_all_groups_sub
 import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.screens_organizer_dashboard_nav_field_officers
@@ -104,6 +113,9 @@ import org.mifos.groupbanking.feature.organizerdashboard.generated.resources.scr
 internal fun OrganizerDashboardScreen(
     onNavigateToGroupList: () -> Unit,
     onNavigateToFieldOfficerDashboard: () -> Unit,
+    onNavigateToMeetingCalendar: (groupId: String) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToSyncStatus: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: OrganizerDashboardViewModel = koinViewModel(),
 ) {
@@ -119,12 +131,15 @@ internal fun OrganizerDashboardScreen(
         when (event) {
             OrganizerDashboardEvent.NavigateToGroupList -> onNavigateToGroupList()
             OrganizerDashboardEvent.NavigateToFieldOfficerDashboard -> onNavigateToFieldOfficerDashboard()
+            is OrganizerDashboardEvent.NavigateToMeetingCalendar -> onNavigateToMeetingCalendar(event.groupId)
+            OrganizerDashboardEvent.NavigateToSettings -> onNavigateToSettings()
+            OrganizerDashboardEvent.NavigateToSyncStatus -> onNavigateToSyncStatus()
+            OrganizerDashboardEvent.NotificationsDeferred -> snackbarHostState.showSnackbar(notificationsDeferredMsg)
             is OrganizerDashboardEvent.ShowSnackbar -> {
                 val resolved = when (event.message) {
                     "error_network" -> networkMsg
                     "error_server" -> serverMsg
                     "error_auth" -> authMsg
-                    ORGANIZER_NOTIFICATIONS_DEFERRED_KEY -> notificationsDeferredMsg
                     else -> event.message
                 }
                 snackbarHostState.showSnackbar(resolved)
@@ -154,6 +169,7 @@ internal fun OrganizerDashboardContent(
 ) {
     val title = stringResource(Res.string.screens_organizer_dashboard_top_bar_title)
     val notificationsCd = stringResource(Res.string.screens_organizer_dashboard_notifications_cd)
+    val moreOptionsCd = stringResource(Res.string.screens_organizer_dashboard_more_options_cd)
 
     KptScaffold(
         showNavigationIcon = false,
@@ -163,6 +179,13 @@ internal fun OrganizerDashboardContent(
                 icon = Icons.Filled.Notifications,
                 contentDescription = notificationsCd,
                 onClick = { onAction(OrganizerDashboardAction.OnOpenNotifications) },
+                testTag = OrganizerDashboardTestTags.NOTIFICATIONS_ACTION,
+            ),
+            TopAppBarAction(
+                icon = Icons.Filled.MoreVert,
+                contentDescription = moreOptionsCd,
+                onClick = { onAction(OrganizerDashboardAction.OnMoreOptions) },
+                testTag = OrganizerDashboardTestTags.MORE_OPTIONS_ACTION,
             ),
         ),
         pullToRefreshState = rememberKptPullToRefreshState(
@@ -173,18 +196,43 @@ internal fun OrganizerDashboardContent(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier.testTag(OrganizerDashboardTestTags.SCREEN),
     ) {
-        when (state.screenState) {
-            OrganizerDashboardScreenState.Loading -> OrganizerLoadingSection()
-            OrganizerDashboardScreenState.Content -> OrganizerContentSection(state = state, onAction = onAction)
-            OrganizerDashboardScreenState.Empty -> OrganizerEmptySection(onViewGroups = { onAction(OrganizerDashboardAction.OnViewAllGroups) })
-            OrganizerDashboardScreenState.Error -> OrganizerErrorSection(
-                message = when (state.error) {
-                    OrganizerDashboardError.Network, null -> stringResource(Res.string.screens_organizer_dashboard_error_network)
-                    OrganizerDashboardError.Server -> stringResource(Res.string.screens_organizer_dashboard_error_server)
-                    OrganizerDashboardError.Auth -> stringResource(Res.string.screens_organizer_dashboard_error_auth)
-                },
-                onRetry = { onAction(OrganizerDashboardAction.Retry) },
-            )
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (state.screenState) {
+                OrganizerDashboardScreenState.Loading -> OrganizerLoadingSection()
+                OrganizerDashboardScreenState.Content -> OrganizerContentSection(state = state, onAction = onAction)
+                OrganizerDashboardScreenState.Empty -> OrganizerEmptySection(onViewGroups = { onAction(OrganizerDashboardAction.OnViewAllGroups) })
+                OrganizerDashboardScreenState.Error -> OrganizerErrorSection(
+                    message = when (state.error) {
+                        OrganizerDashboardError.Network, null -> stringResource(Res.string.screens_organizer_dashboard_error_network)
+                        OrganizerDashboardError.Server -> stringResource(Res.string.screens_organizer_dashboard_error_server)
+                        OrganizerDashboardError.Auth -> stringResource(Res.string.screens_organizer_dashboard_error_auth)
+                    },
+                    onRetry = { onAction(OrganizerDashboardAction.Retry) },
+                )
+            }
+
+            // G13 — top-bar overflow menu, anchored top-end. Bound to the real ViewModel state
+            // (`isMoreMenuExpanded`), toggled by the more_vert TopAppBarAction above.
+            DropdownMenu(
+                expanded = state.isMoreMenuExpanded,
+                onDismissRequest = { onAction(OrganizerDashboardAction.OnMoreOptions) },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .testTag(OrganizerDashboardTestTags.MORE_MENU),
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.screens_organizer_dashboard_menu_settings)) },
+                    onClick = { onAction(OrganizerDashboardAction.OnOpenSettings) },
+                    leadingIcon = { Icon(imageVector = Icons.Filled.Settings, contentDescription = null) },
+                    modifier = Modifier.testTag(OrganizerDashboardTestTags.MENU_SETTINGS_ITEM),
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.screens_organizer_dashboard_menu_sync_status)) },
+                    onClick = { onAction(OrganizerDashboardAction.OnSyncStatus) },
+                    leadingIcon = { Icon(imageVector = Icons.Filled.Sync, contentDescription = null) },
+                    modifier = Modifier.testTag(OrganizerDashboardTestTags.MENU_SYNC_STATUS_ITEM),
+                )
+            }
         }
     }
 }
@@ -288,7 +336,7 @@ private fun OrganizerContentSection(
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(sp.sm)) {
                     OrganizerKpiCard(kpiShareOut, onClick = { onAction(OrganizerDashboardAction.OnViewAllGroups) }, modifier = Modifier.weight(1f))
-                    OrganizerKpiCard(kpiMeetings, onClick = { onAction(OrganizerDashboardAction.OnViewAllGroups) }, modifier = Modifier.weight(1f))
+                    OrganizerKpiCard(kpiMeetings, onClick = { onAction(OrganizerDashboardAction.OnViewMeetingsToday) }, modifier = Modifier.weight(1f))
                 }
             }
         }

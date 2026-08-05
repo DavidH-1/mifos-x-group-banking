@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.shareoutexecute
 
@@ -53,16 +53,15 @@ private const val CONFIRMATION_PHRASE = "SHARE OUT"
 internal val ROTATION_FORMULAS = setOf("FIXED_ORDER", "LOTTERY", "AUCTION")
 
 /**
- * **KNOWN GAP — the preview→execute handoff carries only `{groupId, typeConfig, totalPool,
- * memberPayouts}`** (`ShareOutPreviewEvent.NavigateToShareOutExecute`). `api.yaml#body` for
- * COMP-DIST-001 additionally requires `cycleNumber` + `shareoutFormula`, and COMP-DIST-002 requires
- * the rotation `recipientMemberId` — none of which `ui.yaml#nav_params` name. [DEFAULT_CYCLE_NUMBER]
- * is the sentinel sent for `cycleNumber` until the preview's `NavigateToShareOutExecute` event (which
- * DOES hold `cycleNumber` in `ShareOutPreviewState`) is enriched to forward it. A real companion
- * backend echoes/validates it server-side; the value is audit-only, never a client branch. Flagged
- * for the cross-feature repair station (RULE-IMPLEMENT-CROSS-FEATURE-FIT-001 CFF1) — same
- * documented-gap class as `MemberAddViewModel`'s `UNRESOLVED_OFFICE_ID` / `GroupCreateViewModel`'s
- * `shareoutFormula` default.
+ * `cycleNumber` CFF1 gap CLOSED: the real cycle number is now threaded end-to-end —
+ * `ShareOutPreviewState.cycleNumber` → `ShareOutPreviewEvent.NavigateToShareOutExecute.cycleNumber`
+ * → the preview screen's `onNavigateToShareOutExecute` callback → `GroupBankingNavHost`'s
+ * `navigateToShareOutExecute(cycleNumber = …)` → `ShareOutExecuteRoute.cycleNumber` → this VM's
+ * `cycleNumber` constructor param (`parametersOf`). [DEFAULT_CYCLE_NUMBER] is now only the
+ * constructor/state DEFAULT (e.g. a deep-link that skips the preview), NOT a sentinel on the
+ * preview→execute path. The value is audit-only (echoed/validated server-side, never a client
+ * branch). Remaining CFF1 item: the ROTATING_PAYOUT `recipientMemberId`/`memberPayouts` handoff
+ * (the ACCUMULATING path — the demo/device-verify surface — is fully wired).
  */
 private const val DEFAULT_CYCLE_NUMBER = 0
 
@@ -229,7 +228,7 @@ sealed interface ShareOutExecuteAction {
     sealed interface Internal : ShareOutExecuteAction {
         data class ConnectivityChanged(val online: Boolean) : Internal
         data class BiometricResult(val outcome: BiometricOutcome) : Internal
-        data class ShareOutExecuted(val result: NetworkResult<ShareOutExecuteResult, NetworkError>, val isRetry: Boolean) : Internal
+        data class ShareOutExecuted(val result: NetworkResult<ShareOutExecuteResult, NetworkError>) : Internal
         data class RotationExecuted(val result: NetworkResult<RotationPayoutExecuteResult, NetworkError>) : Internal
     }
 }
@@ -267,6 +266,7 @@ internal class ShareOutExecuteViewModel(
     private val typeConfig: GroupTypeConfig,
     private val totalPool: Double,
     private val memberPayouts: List<MemberPayout>,
+    private val cycleNumber: Int,
 ) : BaseViewModel<ShareOutExecuteState, ShareOutExecuteEvent, ShareOutExecuteAction>(
     initialState = run {
         val poolModel = typeConfig.toPoolModel()
@@ -275,6 +275,7 @@ internal class ShareOutExecuteViewModel(
             typeConfig = typeConfig,
             poolModel = poolModel,
             shareoutFormula = typeConfig.toDefaultShareoutFormula(poolModel),
+            cycleNumber = cycleNumber,
             totalPool = totalPool,
             memberPayouts = memberPayouts,
             totalCount = memberPayouts.size,
@@ -310,7 +311,7 @@ internal class ShareOutExecuteViewModel(
             ShareOutExecuteAction.OnDone -> sendEvent(ShareOutExecuteEvent.NavigateToGroupDashboard(groupId))
             is ShareOutExecuteAction.Internal.ConnectivityChanged -> updateState { copy(isOnline = action.online) }
             is ShareOutExecuteAction.Internal.BiometricResult -> handleBiometricResult(action.outcome)
-            is ShareOutExecuteAction.Internal.ShareOutExecuted -> handleShareOutExecuted(action.result, action.isRetry)
+            is ShareOutExecuteAction.Internal.ShareOutExecuted -> handleShareOutExecuted(action.result)
             is ShareOutExecuteAction.Internal.RotationExecuted -> handleRotationExecuted(action.result)
         }
     }
@@ -377,7 +378,7 @@ internal class ShareOutExecuteViewModel(
             } else {
                 val request = buildShareOutRequest(current, payoutsToExecute)
                 val result = repository.executeShareOut(groupId, request)
-                trySendAction(ShareOutExecuteAction.Internal.ShareOutExecuted(result, isRetry))
+                trySendAction(ShareOutExecuteAction.Internal.ShareOutExecuted(result))
             }
         }
     }
@@ -419,7 +420,7 @@ internal class ShareOutExecuteViewModel(
 
     // -- Async result routing -----------------------------------------------------------------------
 
-    private fun handleShareOutExecuted(result: NetworkResult<ShareOutExecuteResult, NetworkError>, isRetry: Boolean) {
+    private fun handleShareOutExecuted(result: NetworkResult<ShareOutExecuteResult, NetworkError>) {
         when (result) {
             is NetworkResult.Success -> applyShareOutSuccess(result.data)
             is NetworkResult.Error -> applyExecuteError(result.error)

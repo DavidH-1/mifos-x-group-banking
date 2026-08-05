@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.data.repository
 
@@ -58,4 +58,15 @@ interface MemberInviteRepository {
      * non-success result (`data-flow.yaml` OnRevokeInvite undo_optimistic notes).
      */
     suspend fun revokeInvite(groupId: Long, rowId: Long): NetworkResult<Unit, NetworkError>
+
+    /**
+     * Durably enqueues [request] to the offline write-queue ([SyncQueueRepository]) when
+     * `NetworkMonitor` reports offline, returning the generated queue row id. The row targets the
+     * full companion route `/companion/datatables/invitations/{groupId}` so the sync-drain replays
+     * it through the companion `/batches` self-dispatch back to `HandleGenerateInvite` — an offline
+     * invite is queued and later drained, never silently dropped (the prior offline branch surfaced
+     * a `Network` error and lost it). The ViewModel calls this in its pre-flight
+     * `!networkMonitor.isOnline.value` branch instead of [createInvite].
+     */
+    suspend fun enqueueOffline(request: CreateInviteRequest): Long
 }

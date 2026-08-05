@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.joinwithcode
 
@@ -200,7 +200,7 @@ class JoinWithCodeViewModelTest {
     }
 
     @Test
-    fun `TC-JWC-003 OnConfirmJoin success calls joinGroup and emits NavigateToGroupDashboard`() = runTest(testDispatcher) {
+    fun `TC-JWC-003 OnConfirmJoin success calls joinGroup and emits NavigateToPersonalDashboard`() = runTest(testDispatcher) {
         invitationRepository.validateCodeResult = NetworkResult.Success(sampleInvitation(groupId = 5))
         invitationRepository.fetchGroupPreviewResult = NetworkResult.Success(samplePreview(groupId = 5))
         invitationRepository.joinGroupResult = NetworkResult.Success(
@@ -215,7 +215,7 @@ class JoinWithCodeViewModelTest {
         viewModel.eventFlow.test {
             viewModel.trySendAction(JoinWithCodeAction.OnConfirmJoin)
             testDispatcher.scheduler.advanceUntilIdle()
-            assertEquals(JoinWithCodeEvent.NavigateToGroupDashboard(groupId = "5"), awaitItem())
+            assertEquals(JoinWithCodeEvent.NavigateToPersonalDashboard, awaitItem())
         }
 
         assertEquals(1, invitationRepository.joinGroupCallCount)

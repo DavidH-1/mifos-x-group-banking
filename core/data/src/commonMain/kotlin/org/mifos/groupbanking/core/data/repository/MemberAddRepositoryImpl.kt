@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.data.repository
 
@@ -17,10 +17,13 @@ import org.mifos.groupbanking.core.model.MemberCreationResult
 import org.mifos.groupbanking.core.network.mapper.toAssignMemberRoleRequestDto
 import org.mifos.groupbanking.core.network.mapper.toCreateMemberRequestDto
 import org.mifos.groupbanking.core.network.mapper.toDomainModel
+import org.mifos.groupbanking.core.network.mapper.toOfflinePayloadJson
 import org.mifos.groupbanking.core.network.service.memberadd.MemberAddApi
 
 private const val TAG = "MemberAddRepository"
 private const val DEFAULT_PHOTO_FILE_NAME = "member-photo.jpg"
+private const val CREATE_MEMBER_OPERATION_TYPE = "CREATE_MEMBER"
+private const val CREATE_MEMBER_TARGET_ROUTE = "/companion/members"
 
 /**
  * See [MemberAddRepository] KDoc for the Store5-branch rationale (`business_logic.kind:
@@ -31,6 +34,7 @@ private const val DEFAULT_PHOTO_FILE_NAME = "member-photo.jpg"
  */
 class MemberAddRepositoryImpl(
     private val api: MemberAddApi,
+    private val syncQueueRepository: SyncQueueRepository,
 ) : MemberAddRepository {
 
     override suspend fun createMember(
@@ -62,34 +66,9 @@ class MemberAddRepositoryImpl(
                     }
                     is NetworkResult.Success -> {
                         Logger.i(TAG) { "createMember: assignMemberRole succeeded clientId=$clientId" }
-
-                        // Optional, best-effort final step — a photo-upload failure never fails
-                        // the overall create-chain (photo capture is optional per
-                        // ui.yaml#actions.OnPhotoRemoved).
-                        val photoUploaded = if (photoBytes != null) {
-                            when (
-                                val uploadResult = api.uploadMemberPhoto(
-                                    clientId = clientId.toString(),
-                                    photoBytes = photoBytes,
-                                    fileName = request.photoFileName(),
-                                )
-                            ) {
-                                is NetworkResult.Success -> {
-                                    Logger.i(TAG) { "createMember: uploadMemberPhoto succeeded clientId=$clientId" }
-                                    true
-                                }
-                                is NetworkResult.Error -> {
-                                    Logger.e(TAG) {
-                                        "createMember: uploadMemberPhoto failed (non-fatal, member " +
-                                            "still created): ${uploadResult.error}"
-                                    }
-                                    false
-                                }
-                            }
-                        } else {
-                            false
-                        }
-
+                        // Optional, best-effort final step — a photo-upload failure never fails the
+                        // create-chain (photo capture is optional per ui.yaml#actions.OnPhotoRemoved).
+                        val photoUploaded = uploadMemberPhotoBestEffort(clientId, photoBytes, request.photoFileName())
                         NetworkResult.Success(
                             createResult.data.toDomainModel(request = request, photoUploaded = photoUploaded),
                         )
@@ -97,6 +76,47 @@ class MemberAddRepositoryImpl(
                 }
             }
         }
+    }
+
+    /**
+     * Best-effort member-photo upload — returns whether the photo was stored. A null [photoBytes]
+     * (no photo captured) or an upload failure both return `false` WITHOUT failing the surrounding
+     * create-member chain (the client + role are already committed on the server).
+     */
+    private suspend fun uploadMemberPhotoBestEffort(
+        clientId: Long,
+        photoBytes: ByteArray?,
+        fileName: String,
+    ): Boolean {
+        if (photoBytes == null) return false
+        return when (
+            val uploadResult = api.uploadMemberPhoto(
+                clientId = clientId.toString(),
+                photoBytes = photoBytes,
+                fileName = fileName,
+            )
+        ) {
+            is NetworkResult.Success -> {
+                Logger.i(TAG) { "createMember: uploadMemberPhoto succeeded clientId=$clientId" }
+                true
+            }
+            is NetworkResult.Error -> {
+                Logger.e(TAG) {
+                    "createMember: uploadMemberPhoto failed (non-fatal, member still created): ${uploadResult.error}"
+                }
+                false
+            }
+        }
+    }
+
+    override suspend fun enqueueOffline(request: CreateMemberRequest): Long {
+        val payloadJson = request.toOfflinePayloadJson()
+        Logger.i(TAG) { "enqueueOffline: queuing $CREATE_MEMBER_OPERATION_TYPE for groupId=${request.groupId}" }
+        return syncQueueRepository.enqueue(
+            operationType = CREATE_MEMBER_OPERATION_TYPE,
+            targetTable = CREATE_MEMBER_TARGET_ROUTE,
+            payloadJson = payloadJson,
+        )
     }
 }
 

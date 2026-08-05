@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.organizerdashboard
 
@@ -28,18 +28,28 @@ fun NavController.navigateToOrganizerDashboard(navOptions: NavOptions? = null) =
 
 /**
  * Registers [OrganizerDashboardScreen] on the host [NavGraphBuilder]. [onNavigateToGroupList] closes
- * the KPI-card / All-Groups quick-nav / meeting-row / empty-state CTA taps (all target group-list);
- * [onNavigateToFieldOfficerDashboard] closes the optional-tier field-officer quick-nav tap. See
- * API.md#route.
+ * the Groups/Members/Share-Out KPI-card + All-Groups quick-nav + empty-state CTA taps (all target
+ * group-list); [onNavigateToFieldOfficerDashboard] closes the optional-tier field-officer quick-nav
+ * tap; [onNavigateToMeetingCalendar] (G7) closes the Today's-Schedule row + Meetings-Today KPI taps
+ * (both open the tapped group's meeting calendar). The `groupId` String is bridged to
+ * meeting-calendar's `center_id: Int` nav-param at the NavHost seam. [onNavigateToSettings] /
+ * [onNavigateToSyncStatus] (G13) close the top-bar overflow menu items — matching the
+ * group-dashboard / personal-dashboard overflow-menu precedent. See API.md#route.
  */
 fun NavGraphBuilder.organizerDashboardScreen(
     onNavigateToGroupList: () -> Unit,
     onNavigateToFieldOfficerDashboard: () -> Unit,
+    onNavigateToMeetingCalendar: (groupId: String) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToSyncStatus: () -> Unit,
 ) {
     composableWithRootPushTransitions<OrganizerDashboardRoute> {
         OrganizerDashboardScreen(
             onNavigateToGroupList = onNavigateToGroupList,
             onNavigateToFieldOfficerDashboard = onNavigateToFieldOfficerDashboard,
+            onNavigateToMeetingCalendar = onNavigateToMeetingCalendar,
+            onNavigateToSettings = onNavigateToSettings,
+            onNavigateToSyncStatus = onNavigateToSyncStatus,
         )
     }
 }

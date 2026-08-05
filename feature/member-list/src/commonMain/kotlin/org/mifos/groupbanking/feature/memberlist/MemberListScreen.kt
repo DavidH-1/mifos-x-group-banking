@@ -5,16 +5,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.memberlist
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -171,6 +171,7 @@ internal fun MemberListContent(
                 icon = Icons.Filled.GroupAdd,
                 contentDescription = inviteCd,
                 onClick = { onAction(MemberListAction.OnInviteMember) },
+                testTag = MemberListTestTags.INVITE_ACTION,
             ),
         ),
         floatingActionButtonContent = FloatingActionButtonContent(
@@ -216,7 +217,9 @@ internal fun MemberListFabContent(fabCd: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs),
-        modifier = Modifier.semantics { contentDescription = fabCd },
+        modifier = Modifier
+            .testTag(MemberListTestTags.FAB_ADD_MEMBER)
+            .semantics { contentDescription = fabCd },
     ) {
         Icon(imageVector = Icons.Filled.Add, contentDescription = null)
         Text(text = stringResource(Res.string.screens_member_list_action_add_member))

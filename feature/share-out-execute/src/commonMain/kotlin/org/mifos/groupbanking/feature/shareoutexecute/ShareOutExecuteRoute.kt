@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.shareoutexecute
 
@@ -88,6 +88,7 @@ data class ShareOutExecuteRoute(
     val groupId: String,
     val totalPool: Double,
     val memberPayoutsJson: String,
+    val cycleNumber: Int = 0,
     val typeSlug: String = GroupTypeSlug.UNKNOWN.name,
     val displayName: String = "",
     val tagline: String = "",
@@ -133,12 +134,14 @@ fun NavController.navigateToShareOutExecute(
     typeConfig: GroupTypeConfig,
     totalPool: Double,
     memberPayouts: List<MemberPayout>,
+    cycleNumber: Int,
     navOptions: NavOptions? = null,
 ) = navigate(
     ShareOutExecuteRoute(
         groupId = groupId,
         totalPool = totalPool,
         memberPayoutsJson = encodeMemberPayouts(memberPayouts),
+        cycleNumber = cycleNumber,
         typeSlug = typeConfig.typeSlug.name,
         displayName = typeConfig.displayName,
         tagline = typeConfig.tagline,
@@ -175,6 +178,7 @@ fun NavGraphBuilder.shareOutExecuteScreen(
             typeConfig = route.toGroupTypeConfig(),
             totalPool = route.totalPool,
             memberPayouts = decodeMemberPayouts(route.memberPayoutsJson),
+            cycleNumber = route.cycleNumber,
             onNavigateToGroupDashboard = onNavigateToGroupDashboard,
             onNavigateBack = onNavigateBack,
         )

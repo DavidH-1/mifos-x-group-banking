@@ -5,10 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.network.mapper
 
+import kotlinx.serialization.json.Json
 import org.mifos.groupbanking.core.model.CreateInviteRequest
 import org.mifos.groupbanking.core.model.GeneratedInvite
 import org.mifos.groupbanking.core.model.MemberRole
@@ -52,6 +53,26 @@ fun CreateInviteRequest.toDto(): CreateInviteRequestDto = CreateInviteRequestDto
     roleToAssign = roleToAssign.toInviteWireRole(),
     expiresAt = expiresAt,
 )
+
+/**
+ * Server-parity Json config reused for the member-invite SyncQueue payload round-trip (same
+ * private-to-file precedent as `LoanRequestMappers.syncQueueJson` / `GroupCreateMappers`).
+ */
+private val memberInviteSyncQueueJson = Json {
+    ignoreUnknownKeys = true
+    coerceInputValues = true
+}
+
+/**
+ * Serializes this [CreateInviteRequestDto] to the exact JSON body the ONLINE
+ * `MemberInviteApi.createInvite` POSTs to `/companion/datatables/invitations/{groupId}`, for
+ * `SyncQueueRepository.enqueue(targetTable = "/companion/datatables/invitations/{groupId}")` when
+ * `cmp-network-monitor` reports offline. The queued row replays through the companion `/batches`
+ * self-dispatch back to `HandleGenerateInvite` — an offline invite is durably queued, not dropped.
+ * (`groupId` is a path param, carried in the targetTable route — not this body.)
+ */
+fun CreateInviteRequestDto.toJsonPayload(): String =
+    memberInviteSyncQueueJson.encodeToString(CreateInviteRequestDto.serializer(), this)
 
 /** Wire generate-invite response -> domain [GeneratedInvite]. */
 fun GeneratedInviteDto.toDomainModel(): GeneratedInvite = GeneratedInvite(

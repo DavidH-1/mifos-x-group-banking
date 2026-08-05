@@ -40,11 +40,11 @@ import cmp.navigation.ui.rememberKptNavController
 import kotlinx.serialization.Serializable
 import kpt.core.base.ui.KptConnectivityBanner
 import org.mifos.groupbanking.feature.fieldofficerdashboard.fieldOfficerDashboardScreen
+import org.mifos.groupbanking.feature.fieldofficerdashboard.navigateToFieldOfficerDashboard
 import org.mifos.groupbanking.feature.groupcreate.groupCreateScreen
 import org.mifos.groupbanking.feature.groupcreate.navigateToGroupCreate
 import org.mifos.groupbanking.feature.groupdashboard.groupDashboardScreen
 import org.mifos.groupbanking.feature.groupdashboard.navigateToGroupDashboard
-import org.mifos.groupbanking.feature.grouplist.GroupListRoute
 import org.mifos.groupbanking.feature.grouplist.groupListScreen
 import org.mifos.groupbanking.feature.grouplist.navigateToGroupList
 import org.mifos.groupbanking.feature.grouptypepicker.groupTypePickerScreen
@@ -55,8 +55,21 @@ import org.mifos.groupbanking.feature.loanapply.loanApplyScreen
 import org.mifos.groupbanking.feature.loanapply.navigateToLoanApply
 import org.mifos.groupbanking.feature.loandetail.loanDetailScreen
 import org.mifos.groupbanking.feature.loandetail.navigateToLoanDetail
+import org.mifos.groupbanking.feature.loanlist.loanListScreen
+import org.mifos.groupbanking.feature.loanlist.navigateToLoanList
+import org.mifos.groupbanking.feature.loanmarkdefaulteddialog.LoanMarkDefaultedDialog
+import org.mifos.groupbanking.feature.loanrepaymentdialog.LoanRepaymentDialog
+import org.mifos.groupbanking.feature.loanrequest.loanRequestScreen
+import org.mifos.groupbanking.feature.loanrequest.navigateToLoanRequest
+import org.mifos.groupbanking.feature.loginsignup.LoginSignupRoute
+import org.mifos.groupbanking.feature.loginsignup.loginSignupScreen
+import org.mifos.groupbanking.feature.loginsignup.navigateToLoginSignup
+import org.mifos.groupbanking.feature.meetingcalendar.meetingCalendarScreen
+import org.mifos.groupbanking.feature.meetingcalendar.navigateToMeetingCalendar
 import org.mifos.groupbanking.feature.meetingconduct.meetingConductScreen
 import org.mifos.groupbanking.feature.meetingconduct.navigateToMeetingConduct
+import org.mifos.groupbanking.feature.meetingsummary.meetingSummaryScreen
+import org.mifos.groupbanking.feature.meetingsummary.navigateToMeetingSummary
 import org.mifos.groupbanking.feature.memberadd.memberAddScreen
 import org.mifos.groupbanking.feature.memberadd.navigateToMemberAdd
 import org.mifos.groupbanking.feature.memberinvite.memberInviteScreen
@@ -65,34 +78,30 @@ import org.mifos.groupbanking.feature.memberlist.memberListScreen
 import org.mifos.groupbanking.feature.memberlist.navigateToMemberList
 import org.mifos.groupbanking.feature.memberprofile.memberProfileScreen
 import org.mifos.groupbanking.feature.memberprofile.navigateToMemberProfile
-import org.mifos.groupbanking.feature.meetingsummary.meetingSummaryScreen
-import org.mifos.groupbanking.feature.meetingsummary.navigateToMeetingSummary
-import org.mifos.groupbanking.feature.meetingcalendar.meetingCalendarScreen
-import org.mifos.groupbanking.feature.meetingcalendar.navigateToMeetingCalendar
-import org.mifos.groupbanking.feature.previousmeetingreview.navigateToPreviousMeetingReview
-import org.mifos.groupbanking.feature.previousmeetingreview.previousMeetingReviewScreen
-import org.mifos.groupbanking.feature.loanlist.loanListScreen
-import org.mifos.groupbanking.feature.loanlist.navigateToLoanList
-import org.mifos.groupbanking.feature.loanmarkdefaulteddialog.LoanMarkDefaultedDialog
-import org.mifos.groupbanking.feature.loanrepaymentdialog.LoanRepaymentDialog
-import org.mifos.groupbanking.feature.fieldofficerdashboard.navigateToFieldOfficerDashboard
-import org.mifos.groupbanking.feature.loginsignup.LoginSignupRoute
-import org.mifos.groupbanking.feature.loginsignup.loginSignupScreen
-import org.mifos.groupbanking.feature.loginsignup.navigateToLoginSignup
 import org.mifos.groupbanking.feature.membersavingsdetail.memberSavingsDetailScreen
 import org.mifos.groupbanking.feature.membersavingsdetail.navigateToMemberSavingsDetail
 import org.mifos.groupbanking.feature.organizerdashboard.navigateToOrganizerDashboard
 import org.mifos.groupbanking.feature.organizerdashboard.organizerDashboardScreen
+import org.mifos.groupbanking.feature.personaldashboard.PersonalDashboardRoute
 import org.mifos.groupbanking.feature.personaldashboard.navigateToPersonalDashboard
 import org.mifos.groupbanking.feature.personaldashboard.personalDashboardScreen
+import org.mifos.groupbanking.feature.personalloans.navigateToPersonalLoans
+import org.mifos.groupbanking.feature.personalloans.personalLoansScreen
+import org.mifos.groupbanking.feature.personalsavings.navigateToPersonalSavings
+import org.mifos.groupbanking.feature.personalsavings.personalSavingsScreen
+import org.mifos.groupbanking.feature.previousmeetingreview.navigateToPreviousMeetingReview
+import org.mifos.groupbanking.feature.previousmeetingreview.previousMeetingReviewScreen
 import org.mifos.groupbanking.feature.savingsdashboard.navigateToSavingsDashboard
 import org.mifos.groupbanking.feature.savingsdashboard.savingsDashboardScreen
+import org.mifos.groupbanking.feature.settings.navigateToSettings
 import org.mifos.groupbanking.feature.settings.settingsScreen
 import org.mifos.groupbanking.feature.settingslogoutdialog.SettingsLogoutDialog
 import org.mifos.groupbanking.feature.shareoutexecute.navigateToShareOutExecute
 import org.mifos.groupbanking.feature.shareoutexecute.shareOutExecuteScreen
 import org.mifos.groupbanking.feature.shareoutpreview.navigateToShareOutPreview
 import org.mifos.groupbanking.feature.shareoutpreview.shareOutPreviewScreen
+import org.mifos.groupbanking.feature.syncstatus.navigateToSyncStatus
+import org.mifos.groupbanking.feature.syncstatus.syncStatusScreen
 
 /**
  * App-level NavHost for the mifos-x group-banking journey.
@@ -125,13 +134,18 @@ import org.mifos.groupbanking.feature.shareoutpreview.shareOutPreviewScreen
  * `remember { mutableStateOf(false) }` state, same convention as `repaymentDialogTarget` above)
  * which renders [SettingsLogoutDialog] as an overlay; `onNavigateToLogin` routes straight to
  * [navigateToLoginSignup] (the session-expired-mid-PIN-change path, `data-flow.yaml`'s `401 ->
- * navigate: login`). **Known gap:** no screen in this NavHost currently calls
- * `navController.navigateToSettings()` — `ui.yaml#entry_points[0]` declares a `bottom_nav` trigger
- * that does not exist in this app's current live navigation shell (no bottom nav / tab bar is
- * wired here yet). The destination is registered and fully reachable via
- * `navController.navigateToSettings()`, but no in-app affordance calls it yet; flagged as a
- * residual follow-up rather than inventing an unrequested settings entry point on an unrelated
- * screen.
+ * navigate: login`). **Resolved (was a known gap):** `settings` and `sync-status` are now reached
+ * from `personal-dashboard`'s profile/overflow menu — the idea-layer declares that affordance on
+ * the authenticated member home (`personal-dashboard/ui.yaml#components.top_bar.overflow_menu`),
+ * replacing the never-wired `bottom_nav` trigger the settings/sync-status ui.yaml previously
+ * declared. `personalDashboardScreen`'s `onNavigateToSettings`/`onNavigateToSyncStatus` callbacks
+ * call `navController.navigateToSettings()` / `navController.navigateToSyncStatus()`; both
+ * destinations are registered below (`settingsScreen(...)` + `syncStatusScreen()`).
+ *
+ * The un-deferred `personal-dashboard` loan entry card
+ * (`personal-dashboard/ui.yaml#components.loan_card`) is likewise wired: `onNavigateToLoans` →
+ * `navigateToPersonalLoans(clientId)`, with `personalLoansScreen(...)` + `loanRequestScreen(...)`
+ * registered below (personal-dashboard → personal-loans → loan-request).
  */
 @Composable
 fun GroupBankingNavHost(
@@ -163,7 +177,7 @@ fun GroupBankingNavHost(
         ) {
             NavHost(
                 navController = navController,
-                startDestination = LoginSignupRoute,
+                startDestination = LoginSignupRoute(),
                 modifier = Modifier.fillMaxSize(),
             ) {
                 // 1. login-signup (start / pre-auth)
@@ -178,7 +192,11 @@ fun GroupBankingNavHost(
                     onNavigateToOrganizerDashboard = { navController.navigateToOrganizerDashboard() },
                     onNavigateToGroupList = { navController.navigateToGroupList() },
                     onNavigateToGroupTypePicker = { navController.navigateToGroupTypePicker() },
-                    onNavigateToJoinWithCode = { navController.navigateToJoinWithCode() },
+                    // Thread the optional pre-auth resume invite code onward so join-with-code
+                    // can pre-fill it (null for a plain Accept-Invitation / zero-groups Join tap).
+                    onNavigateToJoinWithCode = { inviteCode ->
+                        navController.navigateToJoinWithCode(inviteCode = inviteCode)
+                    },
                 )
 
                 // 2. group-type-picker → group-create (carries the resolved GroupTypeConfig)
@@ -208,25 +226,76 @@ fun GroupBankingNavHost(
 
                 // 5. join-with-code → dashboard (joiner is a MEMBER) / re-auth
                 joinWithCodeScreen(
-                    onNavigateToGroupDashboard = { groupId ->
-                        navController.navigateToGroupDashboard(groupId = groupId, viewerRole = "MEMBER")
+                    // F5 — joiner lands on their own personal-dashboard (identity + joined group
+                    // resolve from the auth token); replaces the prior group-dashboard landing.
+                    onNavigateToPersonalDashboard = { navController.navigateToPersonalDashboard() },
+                    // Pre-auth invite resume (TC-LS-010): carry the entered code back to
+                    // login-signup so a subsequent login/signup success resumes the join.
+                    onNavigateToLoginSignup = { pendingInviteCode ->
+                        navController.navigateToLoginSignup(pendingInviteCode = pendingInviteCode)
                     },
-                    onNavigateToLoginSignup = { _ -> navController.navigateToLoginSignup() },
                     onNavigateBack = { navController.popBackStack() },
                 )
 
                 // 6. personal-dashboard → group-list (+ savings placeholder)
                 personalDashboardScreen(
-                    // personal-dashboard `savings_summary_card.on_click` → the group's savings
-                    // surface. The event carries only (groupId, poolModel); `personal-savings`'s
-                    // route is keyed by (clientId, groupLinkedSavingsId, individualSavingsId) — none
-                    // available at this seam — so we navigate to the param-compatible group
-                    // `savings-dashboard` (keyed by groupId), the SAME drift-bridge convention
-                    // group-dashboard's `onNavigateToMemberSavingsDetail` uses below.
-                    // TODO(nav): route to `personal-savings` once the idea-layer forwards the
-                    // member's clientId/savingsId through PersonalDashboardEvent.NavigateToSavings.
-                    onNavigateToSavings = { groupId, _ -> navController.navigateToSavingsDashboard(groupId = groupId) },
+                    // personal-dashboard `savings_summary_card.on_click` → the member's own
+                    // personal-savings ledger. The event now carries the three personal-savings
+                    // nav_params (clientId, groupLinkedSavingsId, optional individualSavingsId),
+                    // forwarded from the get_member_dashboard response — wired straight to the real
+                    // `personal-savings` feature module (the earlier savings-dashboard drift bridge
+                    // is retired now that MemberDashboard carries these ids).
+                    onNavigateToSavings = { clientId, groupLinkedSavingsId, individualSavingsId, _ ->
+                        navController.navigateToPersonalSavings(
+                            clientId = clientId,
+                            groupLinkedSavingsId = groupLinkedSavingsId,
+                            individualSavingsId = individualSavingsId,
+                        )
+                    },
                     onNavigateToGroupList = { navController.navigateToGroupList() },
+                    // personal-dashboard `loan_card.on_click` → the member's own loan list. The
+                    // event carries the member's clientId (personal-loans' nav_param). Un-deferred
+                    // loan entry (idea-layer/screens/personal-dashboard/ui.yaml#components.loan_card).
+                    onNavigateToLoans = { clientId -> navController.navigateToPersonalLoans(clientId = clientId) },
+                    // personal-dashboard profile/overflow menu → shared settings + sync-status
+                    // (idea-layer/screens/personal-dashboard/ui.yaml#components.top_bar.overflow_menu).
+                    // This is the in-app affordance that resolves the previously-flagged "no screen
+                    // calls navigateToSettings()/navigateToSyncStatus()" gap (see class KDoc).
+                    onNavigateToSettings = { navController.navigateToSettings() },
+                    onNavigateToSyncStatus = { navController.navigateToSyncStatus() },
+                )
+
+                // 6y. personal-loans → loan-request (FAB / empty CTA) / back. Reached from
+                //     personal-dashboard's loan_card tap. `personal-loans` forwards only its own
+                //     `clientId` nav-arg to loan-request; `savingsBalance` is not held at this seam
+                //     (MemberDashboard/personal-loans carry no savings-balance for the member), so it
+                //     is bridged as 0.0 and `loanMultiplier` defaults to 3.0 — the same documented
+                //     drift-bridge convention this NavHost uses elsewhere (see PersonalLoansRoute
+                //     KDoc "caller's responsibility at the nav-graph wiring site"). loan-request then
+                //     re-resolves the member's real eligibility server-side on load.
+                personalLoansScreen(
+                    onNavigateToLoanRequest = { clientId ->
+                        navController.navigateToLoanRequest(clientId = clientId, savingsBalance = 0.0)
+                    },
+                    onNavigateBack = { navController.popBackStack() },
+                )
+
+                // 6x. loan-request → personal-dashboard (submit success) / back to personal-loans.
+                //     Reached from personal-loans' Request-Loan FAB / empty-state CTA. On success the
+                //     member returns to their dashboard: pop back past personal-loans to the existing
+                //     personal-dashboard entry (inclusive=false keeps the dashboard on the stack)
+                //     rather than pushing a duplicate dashboard.
+                loanRequestScreen(
+                    onNavigateToDashboard = {
+                        navController.popBackStack(PersonalDashboardRoute, inclusive = false)
+                    },
+                    onNavigateBack = { navController.popBackStack() },
+                )
+
+                // 6z. personal-savings → back to personal-dashboard (terminal read-only leaf,
+                //     reached from personal-dashboard's savings_summary_card tap).
+                personalSavingsScreen(
+                    onNavigateBack = { navController.popBackStack() },
                 )
 
                 // 6a. field-officer-dashboard (FR-009) → group-dashboard (supervisory read-only view) /
@@ -255,6 +324,17 @@ fun GroupBankingNavHost(
                 organizerDashboardScreen(
                     onNavigateToGroupList = { navController.navigateToGroupList() },
                     onNavigateToFieldOfficerDashboard = { navController.navigateToFieldOfficerDashboard() },
+                    // G7 — Today's-Schedule row + Meetings-Today KPI open the tapped group's meeting
+                    // calendar. group-dashboard forwards a `groupId: String`; meeting-calendar's
+                    // nav_param is `center_id: Int` — same toIntOrNull drift bridge as the
+                    // group-dashboard → meeting-calendar seam below.
+                    onNavigateToMeetingCalendar = { groupId ->
+                        navController.navigateToMeetingCalendar(centerId = groupId.toIntOrNull() ?: 0)
+                    },
+                    // Top-bar overflow menu → shared settings + sync-status (both param-less,
+                    // already registered) — gives the organizer a Settings entry on their landing.
+                    onNavigateToSettings = { navController.navigateToSettings() },
+                    onNavigateToSyncStatus = { navController.navigateToSyncStatus() },
                 )
 
                 // 7. group-dashboard → not-yet-built onward targets (placeholders) + loan-list
@@ -269,8 +349,11 @@ fun GroupBankingNavHost(
                         navController.navigateToMeetingCalendar(centerId = groupId.toIntOrNull() ?: 0)
                     },
                     onNavigateToMemberList = { groupId -> navController.navigateToMemberList(groupId = groupId) },
-                    onNavigateToLoanList = { groupId ->
-                        navController.navigateToLoanList(groupId = groupId.toLongOrNull() ?: 0L)
+                    // viewerRole is forwarded from group-dashboard (server-reconciled role) so
+                    // loan-list can gate the Apply-Loan FAB (canApplyLoan); loan-list threads it
+                    // onward to loan-detail for the record-repayment / mark-defaulted gates.
+                    onNavigateToLoanList = { groupId, viewerRole ->
+                        navController.navigateToLoanList(groupId = groupId.toLongOrNull() ?: 0L, viewerRole = viewerRole)
                     },
                     // group-dashboard `Share Out (cycle-end action)` → share-out-preview
                     // (`idea-layer/screens/share-out-preview/ui.yaml#entry_points[0]`). This seam
@@ -278,16 +361,18 @@ fun GroupBankingNavHost(
                     // drift ShareOutPreviewRoute's "drift bridge" KDoc documents); navigate by
                     // groupId alone, the companion preview response drives poolModel/shareoutFormula.
                     onNavigateToShareOut = { groupId, _ -> navController.navigateToShareOutPreview(groupId = groupId) },
-                    // group-dashboard `OnViewSavings` → the group-level savings-dashboard
+                    // G9 — group-dashboard `OnViewSavings` → the group-level savings-dashboard
                     // (`idea-layer/screens/savings-dashboard/ui.yaml#entry_points[0]`: "OnViewSavings
                     // (all roles)"), NOT member-savings-detail. GroupDashboardViewModel emits this as
-                    // `NavigateToMemberSavingsDetail(groupId)` carrying only groupId (a flagged
-                    // idea-layer drift, see that VM's KDoc + SavingsDashboardRoute KDoc "drift
-                    // bridge"): the catalogue GroupTypeConfig this screen's nav_params want is not
-                    // available at this seam, so we navigate by groupId alone.
-                    onNavigateToMemberSavingsDetail = { groupId ->
+                    // `NavigateToSavingsDashboard(groupId)` carrying only groupId (the dashboard holds
+                    // GroupInstanceConfig, not the catalogue GroupTypeConfig savings-dashboard's
+                    // nav_param wants — flagged idea-layer drift; typeConfig degrades to default here).
+                    onNavigateToSavingsDashboard = { groupId ->
                         navController.navigateToSavingsDashboard(groupId = groupId)
                     },
+                    // G13 — top-bar overflow menu → shared param-less destinations.
+                    onNavigateToSettings = { navController.navigateToSettings() },
+                    onNavigateToSyncStatus = { navController.navigateToSyncStatus() },
                     onNavigateBack = { navController.popBackStack() },
                 )
 
@@ -313,12 +398,13 @@ fun GroupBankingNavHost(
                 // group-dashboard's `Share Out (cycle-end action)`. The confirm handoff now wires to
                 // the REAL share-out-execute feature module (COMP-DIST-001/002 irreversible execute).
                 shareOutPreviewScreen(
-                    onNavigateToShareOutExecute = { groupId, typeConfig, totalPool, memberPayouts ->
+                    onNavigateToShareOutExecute = { groupId, typeConfig, totalPool, memberPayouts, cycleNumber ->
                         navController.navigateToShareOutExecute(
                             groupId = groupId,
                             typeConfig = typeConfig,
                             totalPool = totalPool,
                             memberPayouts = memberPayouts,
+                            cycleNumber = cycleNumber,
                         )
                     },
                     onNavigateBack = { navController.popBackStack() },
@@ -338,7 +424,9 @@ fun GroupBankingNavHost(
 
                 // 8. loan-list → loan-detail (wired for real, its feature module now exists) / loan-apply
                 loanListScreen(
-                    onNavigateToLoanDetail = { loanId -> navController.navigateToLoanDetail(loanId = loanId) },
+                    onNavigateToLoanDetail = { loanId, viewerRole ->
+                        navController.navigateToLoanDetail(loanId = loanId, viewerRole = viewerRole)
+                    },
                     onNavigateToLoanApply = { groupId -> navController.navigateToLoanApply(groupId = groupId) },
                     onNavigateBack = { navController.popBackStack() },
                 )
@@ -387,15 +475,15 @@ fun GroupBankingNavHost(
                             centerId = centerId,
                         )
                     },
-                    // → previous-meeting-review (past-meeting drill-down, calendar-launched).
-                    // `centerId` is now forwarded from the calendar route (was previously the
-                    // `centerId = 0` drift bridge).
-                    onNavigateToReview = { meetingId, meetingNumber, centerId ->
+                    // G5 → previous-meeting-review (past-meeting drill-down, calendar-launched).
+                    // `centerId` + `launchedFrom` ("calendar") are forwarded from the calendar screen's
+                    // event (was previously the `centerId = 0` drift bridge + a hardcoded launchedFrom).
+                    onNavigateToReview = { meetingId, meetingNumber, centerId, launchedFrom ->
                         navController.navigateToPreviousMeetingReview(
                             meetingId = meetingId,
                             meetingNumber = meetingNumber,
                             centerId = centerId,
-                            launchedFrom = "calendar",
+                            launchedFrom = launchedFrom,
                         )
                     },
                     onNavigateBack = { navController.popBackStack() },
@@ -415,15 +503,15 @@ fun GroupBankingNavHost(
                             centerId = centerId,
                         )
                     },
-                    // → previous-meeting-review (step-0 drill-down, conduct-launched).
-                    // TODO(nav): meeting-conduct's callback forwards (meetingId, centerId) but not
-                    // meeting_number — passing 0 until that sibling callback carries it (see drain-request).
-                    onNavigateToPreviousMeetingReview = { meetingId, centerId ->
+                    // G6 → previous-meeting-review (step-0 drill-down, conduct-launched). The callback
+                    // now forwards the real meetingId (String) + meetingNumber (Int, no longer dropped)
+                    // + centerId + launchedFrom ("conduct") — resolves the prior meeting_number=0 drift.
+                    onNavigateToPreviousMeetingReview = { meetingId, meetingNumber, centerId, launchedFrom ->
                         navController.navigateToPreviousMeetingReview(
                             meetingId = meetingId,
-                            meetingNumber = 0,
+                            meetingNumber = meetingNumber,
                             centerId = centerId,
-                            launchedFrom = "conduct",
+                            launchedFrom = launchedFrom,
                         )
                     },
                     onNavigateBack = { navController.popBackStack() },
@@ -449,12 +537,18 @@ fun GroupBankingNavHost(
                 )
 
                 // 10. settings -- migrated off the legacy `kpt.feature.settings` template shell
-                // (see class KDoc "settings" note). Reachable via `navController.navigateToSettings()`.
+                // (see class KDoc "settings" note). Reached via `navController.navigateToSettings()`
+                // from personal-dashboard's profile/overflow menu.
                 settingsScreen(
                     onNavigateToLogin = { navController.navigateToLoginSignup() },
                     onShowLogoutDialog = { showSettingsLogoutDialog = true },
                     onNavigateBack = { navController.popBackStack() },
                 )
+
+                // 10a. sync-status -- read-only offline-sync dashboard (terminal, no outbound nav).
+                // Reached via `navController.navigateToSyncStatus()` from personal-dashboard's
+                // profile/overflow menu (idea-layer/screens/sync-status/ui.yaml#entry_points).
+                syncStatusScreen()
 
                 // 11. member-list → member-profile (row tap) / member-add (Add-Member FAB) / back.
                 //     Reached from group-dashboard's "View Members" action.

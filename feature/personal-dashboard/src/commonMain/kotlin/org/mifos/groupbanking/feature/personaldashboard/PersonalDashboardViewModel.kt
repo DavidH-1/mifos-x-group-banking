@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.personaldashboard
 
@@ -120,6 +120,10 @@ sealed interface DashboardError {
 @Immutable
 data class PersonalDashboardState(
     val memberName: String = "",
+    // Member-identity + savings-account ids forwarded to personal-savings on savings-card tap.
+    val clientId: Long = 0L,
+    val groupLinkedSavingsId: Long = 0L,
+    val individualSavingsId: Long? = null,
     @Transient
     val myGroups: List<GroupSummary> = emptyList(),
     @Transient
@@ -151,12 +155,13 @@ val PersonalDashboardState.screenState: PersonalDashboardScreenState
  * One-shot side effects emitted by `PersonalDashboardViewModel` — verbatim mirror of
  * ui.yaml#state_model.PersonalDashboardViewModel.events.
  *
- * [NavigateToSavings] carries `groupId` + `poolModel` (the `SavingsMechanism.name` string) —
- * `flow.yaml#on_savings_card_click` describes passing `selectedGroup.groupId` and `typeConfig`
- * to the personal-savings screen so it can render the correct pool-model view, but
- * `MemberDashboard`/`GroupSummary` carry no full `typeConfig` object (only the `poolModel`
- * discriminator) — `poolModel` is the closest available substitute and is sufficient for the
- * described purpose (choosing the ACCUMULATING vs ROTATING_PAYOUT layout on the target screen).
+ * [NavigateToSavings] carries the three `personal-savings` nav_params — [clientId],
+ * [groupLinkedSavingsId], and (optional) [individualSavingsId] — resolved from the member-dashboard
+ * response (`get_member_dashboard`, `ui.yaml#components.savings_summary_card.on_click.params`). It
+ * also carries `poolModel` (the `SavingsMechanism.name` string) so the target screen can choose the
+ * ACCUMULATING vs ROTATING_PAYOUT layout. This closes the previously-flagged gap where
+ * `MemberDashboard` carried none of the personal-savings ids and the card was drift-bridged to the
+ * group-level `savings-dashboard`.
  *
  * **Idea-layer gap (flagged, not invented here):** [NavigateToGroupList] is declared in
  * ui.yaml#state_model.events.members and `flow.yaml#navigates_to: [group-list]`, but NO
@@ -170,8 +175,35 @@ val PersonalDashboardState.screenState: PersonalDashboardScreenState
  * navigation from this screen is actually wanted. See API.md#events.
  */
 sealed interface PersonalDashboardEvent {
-    data class NavigateToSavings(val groupId: String, val poolModel: String) : PersonalDashboardEvent
+    data class NavigateToSavings(
+        val clientId: Long,
+        val groupLinkedSavingsId: Long,
+        val individualSavingsId: Long?,
+        val poolModel: String,
+    ) : PersonalDashboardEvent
     data object NavigateToGroupList : PersonalDashboardEvent
+
+    /**
+     * loan_card tap → `personal-loans` (`ui.yaml#components.loan_card.on_click`, un-deferred loan
+     * entry). Carries the member's [clientId] — the `personal-loans` nav_param
+     * (`ui.yaml#components.loan_card.on_click.params: { clientId }`).
+     */
+    data class NavigateToLoans(val clientId: Long) : PersonalDashboardEvent
+
+    /** Profile overflow menu → `settings` (`ui.yaml#components.top_bar.overflow_menu.menu_settings`). */
+    data object NavigateToSettings : PersonalDashboardEvent
+
+    /** Profile overflow menu → `sync-status` (`ui.yaml#components.top_bar.overflow_menu.menu_sync_status`). */
+    data object NavigateToSyncStatus : PersonalDashboardEvent
+
+    /**
+     * Notification bell tap → deferred in-app notifications centre (G14,
+     * `ui.yaml#components.top_bar.trailing.notification_icon.on_click`). The notifications screen
+     * ships in a later release (`release_plan.deferred[]`), so this event carries NO navigation —
+     * the Screen shows a snackbar (`notifications_deferred` key) informing the member. Closes the
+     * previously-dead badge icon that had no `on_click`.
+     */
+    data object NotificationsDeferred : PersonalDashboardEvent
 }
 
 /**
@@ -187,6 +219,12 @@ sealed interface PersonalDashboardAction {
     data object OnRetry : PersonalDashboardAction
     data object OnSavingsCardClick : PersonalDashboardAction
     data class OnSelectGroup(val groupId: String) : PersonalDashboardAction
+    data object OnLoansCardClick : PersonalDashboardAction
+    data object OnSettingsClick : PersonalDashboardAction
+    data object OnSyncStatusClick : PersonalDashboardAction
+
+    /** Notification bell tap (`ui.yaml#components.top_bar.trailing.notification_icon`, G14). */
+    data object OnOpenNotifications : PersonalDashboardAction
 
     /** Async stream emissions — routed via `trySendAction`, never dispatched by the UI. */
     sealed interface Internal : PersonalDashboardAction {
@@ -258,8 +296,27 @@ internal class PersonalDashboardViewModel(
             PersonalDashboardAction.OnRetry -> handleRetry()
             PersonalDashboardAction.OnSavingsCardClick -> handleSavingsCardClick()
             is PersonalDashboardAction.OnSelectGroup -> handleSelectGroup(action.groupId)
+            PersonalDashboardAction.OnLoansCardClick -> handleLoansCardClick()
+            PersonalDashboardAction.OnSettingsClick -> sendEvent(PersonalDashboardEvent.NavigateToSettings)
+            PersonalDashboardAction.OnSyncStatusClick -> sendEvent(PersonalDashboardEvent.NavigateToSyncStatus)
+            PersonalDashboardAction.OnOpenNotifications -> handleOpenNotifications()
             is PersonalDashboardAction.Internal.StreamUpdated -> handleStreamUpdated(action.screenState)
         }
+    }
+
+    // -- Loan entry card tap (ui.yaml effect: navigate, target: personal-loans) ---------------------
+
+    private fun handleLoansCardClick() {
+        Logger.i(TAG) { "loan card tapped clientId=${state.clientId} — navigating to personal-loans" }
+        analytics.trackLoanOperation(operation = "view")
+        sendEvent(PersonalDashboardEvent.NavigateToLoans(clientId = state.clientId))
+    }
+
+    // -- Notification bell tap (ui.yaml effect: emit_event — deferred notifications centre, G14) ----
+
+    private fun handleOpenNotifications() {
+        Logger.i(TAG) { "notification bell tapped — in-app notifications centre deferred to a later release" }
+        sendEvent(PersonalDashboardEvent.NotificationsDeferred)
     }
 
     // -- Group selector chip tap (ui.yaml effect: call_api, re-fetch for tapped groupId) ----------
@@ -293,10 +350,15 @@ internal class PersonalDashboardViewModel(
             return
         }
         analytics.trackSavingsOperation(operation = "view", accountId = group.groupId)
-        Logger.i(TAG) { "savings card tapped groupId=${group.groupId} poolModel=${group.poolModel}" }
+        Logger.i(TAG) {
+            "savings card tapped groupId=${group.groupId} clientId=${state.clientId} " +
+                "groupLinkedSavingsId=${state.groupLinkedSavingsId} poolModel=${group.poolModel}"
+        }
         sendEvent(
             PersonalDashboardEvent.NavigateToSavings(
-                groupId = group.groupId,
+                clientId = state.clientId,
+                groupLinkedSavingsId = state.groupLinkedSavingsId,
+                individualSavingsId = state.individualSavingsId,
                 poolModel = group.poolModel.name,
             ),
         )
@@ -349,6 +411,9 @@ internal class PersonalDashboardViewModel(
                 val dashboard = screenState.data
                 copy(
                     memberName = dashboard.memberName,
+                    clientId = dashboard.clientId,
+                    groupLinkedSavingsId = dashboard.groupLinkedSavingsId,
+                    individualSavingsId = dashboard.individualSavingsId,
                     myGroups = dashboard.myGroups,
                     selectedGroup = dashboard.selectedGroup,
                     poolModel = dashboard.poolModel.name,

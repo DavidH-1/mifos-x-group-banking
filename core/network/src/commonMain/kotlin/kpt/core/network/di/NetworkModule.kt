@@ -17,6 +17,7 @@ import kpt.core.base.network.SupabaseCredentials
 import kpt.core.base.network.httpClient
 import kpt.core.base.network.setupDefaultHttpClient
 import org.koin.dsl.module
+import org.mifos.groupbanking.core.network.auth.companionAuthHeaderPlugin
 import org.mifos.groupbanking.core.network.config.BatchSyncApiConfig
 import org.mifos.groupbanking.core.network.config.ChangePinApiConfig
 import org.mifos.groupbanking.core.network.config.CompanionAuthApiConfig
@@ -29,45 +30,41 @@ import org.mifos.groupbanking.core.network.config.InvitationApiConfig
 import org.mifos.groupbanking.core.network.config.LoanApiConfig
 import org.mifos.groupbanking.core.network.config.LoanApplyApiConfig
 import org.mifos.groupbanking.core.network.config.LoanDetailApiConfig
-import org.mifos.groupbanking.core.network.config.MeetingRecordApiConfig
 import org.mifos.groupbanking.core.network.config.LoanRepaymentApiConfig
 import org.mifos.groupbanking.core.network.config.LoanRequestApiConfig
 import org.mifos.groupbanking.core.network.config.LoanWriteoffApiConfig
+import org.mifos.groupbanking.core.network.config.MeetingApiConfig
+import org.mifos.groupbanking.core.network.config.MeetingAttendanceApiConfig
+import org.mifos.groupbanking.core.network.config.MeetingConductApiConfig
+import org.mifos.groupbanking.core.network.config.MeetingRecordApiConfig
 import org.mifos.groupbanking.core.network.config.MemberAddApiConfig
-import org.mifos.groupbanking.core.network.config.MemberInviteApiConfig
 import org.mifos.groupbanking.core.network.config.MemberApiConfig
 import org.mifos.groupbanking.core.network.config.MemberDashboardApiConfig
+import org.mifos.groupbanking.core.network.config.MemberInviteApiConfig
 import org.mifos.groupbanking.core.network.config.MemberProfileApiConfig
+import org.mifos.groupbanking.core.network.config.OrganizerDashboardApiConfig
+import org.mifos.groupbanking.core.network.config.SavingsApiConfig
+import org.mifos.groupbanking.core.network.config.ShareOutApiConfig
 import org.mifos.groupbanking.core.network.service.batchsync.BatchSyncApi
 import org.mifos.groupbanking.core.network.service.batchsync.BatchSyncApiImpl
 import org.mifos.groupbanking.core.network.service.changepin.ChangePinApi
 import org.mifos.groupbanking.core.network.service.changepin.ChangePinApiImpl
-import org.mifos.groupbanking.core.network.service.groupdashboard.GroupDashboardApi
-import org.mifos.groupbanking.core.network.service.groupdashboard.GroupDashboardApiImpl
 import org.mifos.groupbanking.core.network.service.fieldofficerdashboard.FieldOfficerApi
 import org.mifos.groupbanking.core.network.service.fieldofficerdashboard.FieldOfficerApiImpl
-import org.mifos.groupbanking.core.network.service.grouplist.GroupApi
-import org.mifos.groupbanking.core.network.service.grouplist.GroupApiImpl
 import org.mifos.groupbanking.core.network.service.groupcreate.GroupCreateApi
 import org.mifos.groupbanking.core.network.service.groupcreate.GroupCreateApiImpl
+import org.mifos.groupbanking.core.network.service.groupdashboard.GroupDashboardApi
+import org.mifos.groupbanking.core.network.service.groupdashboard.GroupDashboardApiImpl
+import org.mifos.groupbanking.core.network.service.grouplist.GroupApi
+import org.mifos.groupbanking.core.network.service.grouplist.GroupApiImpl
 import org.mifos.groupbanking.core.network.service.grouptypepicker.GroupTypeConfigApi
 import org.mifos.groupbanking.core.network.service.grouptypepicker.GroupTypeConfigApiImpl
 import org.mifos.groupbanking.core.network.service.joinwithcode.InvitationApi
 import org.mifos.groupbanking.core.network.service.joinwithcode.InvitationApiImpl
-import org.mifos.groupbanking.core.network.service.memberinvite.MemberInviteApi
-import org.mifos.groupbanking.core.network.service.memberinvite.MemberInviteApiImpl
-import org.mifos.groupbanking.core.network.service.loandetail.LoanDetailApi
-import org.mifos.groupbanking.core.network.service.loandetail.LoanDetailApiImpl
-import org.mifos.groupbanking.core.network.service.meetingsummary.MeetingRecordApi
-import org.mifos.groupbanking.core.network.service.meetingsummary.MeetingRecordApiImpl
-import org.mifos.groupbanking.core.network.config.MeetingApiConfig
-import org.mifos.groupbanking.core.network.config.MeetingAttendanceApiConfig
-import org.mifos.groupbanking.core.network.service.previousmeetingreview.MeetingAttendanceApi
-import org.mifos.groupbanking.core.network.service.previousmeetingreview.MeetingAttendanceApiImpl
-import org.mifos.groupbanking.core.network.service.meetingcalendar.MeetingApi
-import org.mifos.groupbanking.core.network.service.meetingcalendar.MeetingApiImpl
 import org.mifos.groupbanking.core.network.service.loanapply.LoanApplyApi
 import org.mifos.groupbanking.core.network.service.loanapply.LoanApplyApiImpl
+import org.mifos.groupbanking.core.network.service.loandetail.LoanDetailApi
+import org.mifos.groupbanking.core.network.service.loandetail.LoanDetailApiImpl
 import org.mifos.groupbanking.core.network.service.loanlist.LoanApi
 import org.mifos.groupbanking.core.network.service.loanlist.LoanApiImpl
 import org.mifos.groupbanking.core.network.service.loanrepayment.LoanRepaymentApi
@@ -78,22 +75,26 @@ import org.mifos.groupbanking.core.network.service.loanwriteoff.LoanWriteoffApi
 import org.mifos.groupbanking.core.network.service.loanwriteoff.LoanWriteoffApiImpl
 import org.mifos.groupbanking.core.network.service.loginsignup.CompanionAuthApi
 import org.mifos.groupbanking.core.network.service.loginsignup.CompanionAuthApiImpl
+import org.mifos.groupbanking.core.network.service.meetingcalendar.MeetingApi
+import org.mifos.groupbanking.core.network.service.meetingcalendar.MeetingApiImpl
+import org.mifos.groupbanking.core.network.service.meetingconduct.MeetingConductApi
+import org.mifos.groupbanking.core.network.service.meetingconduct.MeetingConductApiImpl
+import org.mifos.groupbanking.core.network.service.meetingsummary.MeetingRecordApi
+import org.mifos.groupbanking.core.network.service.meetingsummary.MeetingRecordApiImpl
 import org.mifos.groupbanking.core.network.service.memberadd.MemberAddApi
 import org.mifos.groupbanking.core.network.service.memberadd.MemberAddApiImpl
+import org.mifos.groupbanking.core.network.service.memberinvite.MemberInviteApi
+import org.mifos.groupbanking.core.network.service.memberinvite.MemberInviteApiImpl
 import org.mifos.groupbanking.core.network.service.memberlist.MemberApi
 import org.mifos.groupbanking.core.network.service.memberlist.MemberApiImpl
 import org.mifos.groupbanking.core.network.service.memberprofile.MemberProfileApi
 import org.mifos.groupbanking.core.network.service.memberprofile.MemberProfileApiImpl
-import org.mifos.groupbanking.core.network.config.OrganizerDashboardApiConfig
 import org.mifos.groupbanking.core.network.service.organizerdashboard.OrganizerDashboardApi
 import org.mifos.groupbanking.core.network.service.organizerdashboard.OrganizerDashboardApiImpl
 import org.mifos.groupbanking.core.network.service.personaldashboard.MemberDashboardApi
 import org.mifos.groupbanking.core.network.service.personaldashboard.MemberDashboardApiImpl
-import org.mifos.groupbanking.core.network.config.MeetingConductApiConfig
-import org.mifos.groupbanking.core.network.config.SavingsApiConfig
-import org.mifos.groupbanking.core.network.config.ShareOutApiConfig
-import org.mifos.groupbanking.core.network.service.meetingconduct.MeetingConductApi
-import org.mifos.groupbanking.core.network.service.meetingconduct.MeetingConductApiImpl
+import org.mifos.groupbanking.core.network.service.previousmeetingreview.MeetingAttendanceApi
+import org.mifos.groupbanking.core.network.service.previousmeetingreview.MeetingAttendanceApiImpl
 import org.mifos.groupbanking.core.network.service.savings.SavingsApi
 import org.mifos.groupbanking.core.network.service.savings.SavingsApiImpl
 import org.mifos.groupbanking.core.network.service.shareout.ShareOutApi
@@ -152,6 +153,11 @@ val NetworkModule = module {
                 retryOnServerErrors(maxRetries = 3)
                 exponentialDelay()
             }
+            // Attach the companion session bearer token to EVERY request from this shared client,
+            // so the server can resolve the authenticated caller (real name on the organizer
+            // dashboard, and any per-user-scoped endpoint) — not just the explicit /me call.
+            // Skips pre-login calls (no session yet) and never overwrites an explicit header.
+            install(companionAuthHeaderPlugin(get()))
         }
     }
     single<CompanionAuthApi> { CompanionAuthApiImpl(httpClient = get()) }

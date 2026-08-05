@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.personaldashboard
 
@@ -22,7 +22,7 @@ object PersonalDashboardTestTags {
     /** Root [kpt.core.ui.scaffold.KptScaffold] surface — always rendered regardless of screenState. */
     const val SCREEN: String = "personal_dashboard_screen"
 
-    /** Decorative notifications bell — no declared `on_click` in ui.yaml, not interactive. */
+    /** Notifications bell icon-button — [PersonalDashboardAction.OnOpenNotifications] (G14, deferred-notifications snackbar). */
     const val NOTIFICATION_ICON: String = "personal_dashboard_notification_icon"
 
     /** Primary-colored group banner (name + currency chip + optional selector row). */
@@ -33,6 +33,18 @@ object PersonalDashboardTestTags {
 
     /** Savings summary card — [PersonalDashboardAction.OnSavingsCardClick]. */
     const val SAVINGS_CARD: String = "personal_dashboard_savings_card"
+
+    /** Loan entry card — [PersonalDashboardAction.OnLoansCardClick] (navigates to personal-loans). */
+    const val LOAN_CARD: String = "personal_dashboard_loan_card"
+
+    /** Profile / overflow menu icon-button — opens the Settings / Sync Status dropdown. */
+    const val OVERFLOW_MENU: String = "personal_dashboard_overflow_menu"
+
+    /** "Settings" item in the profile overflow menu — [PersonalDashboardAction.OnSettingsClick]. */
+    const val MENU_SETTINGS_ITEM: String = "personal_dashboard_menu_settings"
+
+    /** "Sync Status" item in the profile overflow menu — [PersonalDashboardAction.OnSyncStatusClick]. */
+    const val MENU_SYNC_STATUS_ITEM: String = "personal_dashboard_menu_sync_status"
 
     /** Pool-model-adaptive share-out / rotation-position projection card. */
     const val SHAREOUT_CARD: String = "personal_dashboard_shareout_card"

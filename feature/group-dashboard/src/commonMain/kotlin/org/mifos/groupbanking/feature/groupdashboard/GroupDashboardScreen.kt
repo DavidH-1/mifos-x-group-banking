@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.groupdashboard
 
@@ -26,8 +26,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -69,14 +72,16 @@ import org.mifos.groupbanking.feature.groupdashboard.generated.resources.screens
 import org.mifos.groupbanking.feature.groupdashboard.generated.resources.screens_group_dashboard_error_not_found
 import org.mifos.groupbanking.feature.groupdashboard.generated.resources.screens_group_dashboard_error_server
 import org.mifos.groupbanking.feature.groupdashboard.generated.resources.screens_group_dashboard_error_state_title
+import org.mifos.groupbanking.feature.groupdashboard.generated.resources.screens_group_dashboard_menu_group_settings
+import org.mifos.groupbanking.feature.groupdashboard.generated.resources.screens_group_dashboard_menu_sync_status
 import org.mifos.groupbanking.feature.groupdashboard.generated.resources.screens_group_dashboard_more_options_cd
 import org.mifos.groupbanking.feature.groupdashboard.generated.resources.screens_group_dashboard_share_out_not_available
 
 /**
  * Container for `group-dashboard-screen`. Collects [GroupDashboardViewModel] state via
  * [collectAsStateWithLifecycle], consumes one-shot [GroupDashboardEvent]s (navigate to
- * meeting-calendar / member-list / loan-list / share-out-preview / member-savings-detail / back,
- * show the corpus-blocked dialog, show a snackbar) through [EventsEffect], and delegates all
+ * meeting-calendar / member-list / loan-list / share-out-preview / savings-dashboard / settings /
+ * sync-status / back, show the corpus-blocked dialog, show a snackbar) through [EventsEffect], and delegates all
  * rendering to the stateless [GroupDashboardContent]. [groupId] and [viewerRole] are the
  * `ui.yaml#nav_params` forwarded from `group-list` / `group-create` — supplied to
  * [GroupDashboardViewModel] via Koin `parametersOf(groupId, viewerRole)` (`groupId` FIRST,
@@ -88,9 +93,11 @@ internal fun GroupDashboardScreen(
     viewerRole: String,
     onNavigateToMeetingCalendar: (groupId: String) -> Unit,
     onNavigateToMemberList: (groupId: String) -> Unit,
-    onNavigateToLoanList: (groupId: String) -> Unit,
+    onNavigateToLoanList: (groupId: String, viewerRole: String) -> Unit,
     onNavigateToShareOut: (groupId: String, distributionStrategy: String) -> Unit,
-    onNavigateToMemberSavingsDetail: (groupId: String) -> Unit,
+    onNavigateToSavingsDashboard: (groupId: String) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToSyncStatus: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: GroupDashboardViewModel = koinViewModel(parameters = { parametersOf(groupId, viewerRole) }),
@@ -111,9 +118,13 @@ internal fun GroupDashboardScreen(
         when (event) {
             is GroupDashboardEvent.NavigateToMeetingCalendar -> onNavigateToMeetingCalendar(event.groupId)
             is GroupDashboardEvent.NavigateToMemberList -> onNavigateToMemberList(event.groupId)
-            is GroupDashboardEvent.NavigateToLoanList -> onNavigateToLoanList(event.groupId)
+            // Forward the server-reconciled viewerRole (state.viewerRole) so loan-list can gate the
+            // Apply-Loan FAB; state.viewerRole wins over the seed nav-param once Content resolves.
+            is GroupDashboardEvent.NavigateToLoanList -> onNavigateToLoanList(event.groupId, state.viewerRole)
             is GroupDashboardEvent.NavigateToShareOut -> onNavigateToShareOut(event.groupId, event.distributionStrategy)
-            is GroupDashboardEvent.NavigateToMemberSavingsDetail -> onNavigateToMemberSavingsDetail(event.groupId)
+            is GroupDashboardEvent.NavigateToSavingsDashboard -> onNavigateToSavingsDashboard(event.groupId)
+            GroupDashboardEvent.NavigateToSettings -> onNavigateToSettings()
+            GroupDashboardEvent.NavigateToSyncStatus -> onNavigateToSyncStatus()
             GroupDashboardEvent.NavigateBack -> onNavigateBack()
             GroupDashboardEvent.ShowCorpusBlockedDialog -> showCorpusBlockedDialog = true
             is GroupDashboardEvent.ShowSnackbar -> snackbarHostState.showSnackbar(
@@ -159,7 +170,6 @@ internal fun GroupDashboardContent(
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    var showMoreMenu by remember { mutableStateOf(false) }
     val moreOptionsCd = stringResource(Res.string.screens_group_dashboard_more_options_cd)
     val title = state.group?.name.orEmpty()
 
@@ -170,7 +180,7 @@ internal fun GroupDashboardContent(
             TopAppBarAction(
                 icon = Icons.Filled.MoreVert,
                 contentDescription = moreOptionsCd,
-                onClick = { showMoreMenu = true },
+                onClick = { onAction(GroupDashboardAction.OnMoreOptions) },
             ),
         ),
         pullToRefreshState = rememberKptPullToRefreshState(
@@ -192,8 +202,23 @@ internal fun GroupDashboardContent(
                 GroupDashboardScreenState.Error -> GroupDashboardErrorSection(state = state, onAction = onAction)
             }
 
-            DropdownMenu(expanded = showMoreMenu, onDismissRequest = { showMoreMenu = false }) {
-                // Intentionally empty — see class KDoc.
+            DropdownMenu(
+                expanded = state.isMoreMenuExpanded,
+                onDismissRequest = { onAction(GroupDashboardAction.OnMoreOptions) },
+                modifier = Modifier.testTag(GroupDashboardTestTags.MORE_MENU),
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.screens_group_dashboard_menu_group_settings)) },
+                    onClick = { onAction(GroupDashboardAction.OnGroupSettings) },
+                    leadingIcon = { Icon(imageVector = Icons.Filled.Settings, contentDescription = null) },
+                    modifier = Modifier.testTag(GroupDashboardTestTags.MENU_SETTINGS_ITEM),
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.screens_group_dashboard_menu_sync_status)) },
+                    onClick = { onAction(GroupDashboardAction.OnSyncStatus) },
+                    leadingIcon = { Icon(imageVector = Icons.Filled.Sync, contentDescription = null) },
+                    modifier = Modifier.testTag(GroupDashboardTestTags.MENU_SYNC_STATUS_ITEM),
+                )
             }
         }
     }

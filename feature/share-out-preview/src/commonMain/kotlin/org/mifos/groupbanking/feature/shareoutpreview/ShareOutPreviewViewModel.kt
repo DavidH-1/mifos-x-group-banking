@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.shareoutpreview
 
@@ -151,6 +151,7 @@ sealed interface ShareOutPreviewEvent {
         val typeConfig: GroupTypeConfig,
         val totalPool: Double,
         val memberPayouts: List<MemberPayout>,
+        val cycleNumber: Int,
     ) : ShareOutPreviewEvent
 
     data object NavigateBack : ShareOutPreviewEvent
@@ -333,6 +334,7 @@ internal class ShareOutPreviewViewModel(
                 typeConfig = typeConfig,
                 totalPool = current.totalPool,
                 memberPayouts = current.memberPayouts,
+                cycleNumber = current.cycleNumber,
             ),
         )
     }

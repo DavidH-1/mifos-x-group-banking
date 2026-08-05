@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.memberinvite
 
@@ -30,8 +30,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
@@ -108,6 +108,7 @@ import org.mifos.groupbanking.feature.memberinvite.generated.resources.screens_m
 import org.mifos.groupbanking.feature.memberinvite.generated.resources.screens_member_invite_share_subject
 import org.mifos.groupbanking.feature.memberinvite.generated.resources.screens_member_invite_snack_code_copied
 import org.mifos.groupbanking.feature.memberinvite.generated.resources.screens_member_invite_snack_link_copied
+import org.mifos.groupbanking.feature.memberinvite.generated.resources.screens_member_invite_snack_queued_offline
 import org.mifos.groupbanking.feature.memberinvite.generated.resources.screens_member_invite_snack_revoked
 import org.mifos.groupbanking.feature.memberinvite.generated.resources.screens_member_invite_topbar_title
 
@@ -139,6 +140,7 @@ internal fun MemberInviteScreen(
     val codeCopied = stringResource(Res.string.screens_member_invite_snack_code_copied)
     val linkCopied = stringResource(Res.string.screens_member_invite_snack_link_copied)
     val revoked = stringResource(Res.string.screens_member_invite_snack_revoked)
+    val queuedOffline = stringResource(Res.string.screens_member_invite_snack_queued_offline)
     val networkError = stringResource(Res.string.screens_member_invite_error_network)
     val serverError = stringResource(Res.string.screens_member_invite_error_server)
     val authError = stringResource(Res.string.screens_member_invite_error_auth)
@@ -161,6 +163,7 @@ internal fun MemberInviteScreen(
                     "snack_code_copied" -> codeCopied
                     "snack_link_copied" -> linkCopied
                     "snack_invite_revoked" -> revoked
+                    "snack_invite_queued_offline" -> queuedOffline
                     "error_network" -> networkError
                     "error_server" -> serverError
                     "error_auth" -> authError

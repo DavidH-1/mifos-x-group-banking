@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.feature.meetingconduct
 
@@ -47,7 +47,7 @@ fun NavController.navigateToMeetingConduct(
  */
 fun NavGraphBuilder.meetingConductScreen(
     onNavigateToMeetingSummary: (meetingId: String, meetingNumber: Int, centerId: Int) -> Unit,
-    onNavigateToPreviousMeetingReview: (meetingId: String, centerId: Int) -> Unit,
+    onNavigateToPreviousMeetingReview: (meetingId: String, meetingNumber: Int, centerId: Int, launchedFrom: String) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     composableWithRootPushTransitions<MeetingConductRoute> { backStackEntry ->

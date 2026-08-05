@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.database.personaldashboard.entity
 
@@ -47,6 +47,12 @@ data class MemberDashboardCacheEntity(
     @PrimaryKey
     val cacheKey: String,
     val memberName: String,
+    // Member-identity + savings-account ids forwarded to personal-savings (nullable individual
+    // account). New columns as of AppDatabase v16 — fresh installs pick this up via
+    // fallbackToDestructiveMigration.
+    val clientId: Long,
+    val groupLinkedSavingsId: Long,
+    val individualSavingsId: Long?,
     val selectedGroupId: String,
     val selectedGroupName: String,
     val selectedGroupPoolModel: String,

@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.datastore.sync
 
@@ -19,7 +19,6 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 private const val LAST_SYNC_AT_EPOCH_MS_KEY = "last_synced_at_epoch_ms"
-private const val TAG = "SyncMetadataStore"
 
 /**
  * [SyncMetadataStore] backed directly by the PLAIN (non-secure) [Settings] instance —

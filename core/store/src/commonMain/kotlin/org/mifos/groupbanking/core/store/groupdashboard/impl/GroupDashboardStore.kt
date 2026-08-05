@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
+ * See See https://github.com/openMF/kmp-project-template/blob/main/LICENSE
  */
 package org.mifos.groupbanking.core.store.groupdashboard.impl
 
@@ -191,6 +191,7 @@ private fun GroupDashboard.toPayload(): CachedGroupDashboard = CachedGroupDashbo
         totalContributionsThisCycle = corpus.totalContributionsThisCycle,
         totalLoansOutstanding = corpus.totalLoansOutstanding,
         lastUpdated = corpus.lastUpdated,
+        isCycleEnd = corpus.isCycleEnd,
         rotationPosition = corpus.rotationPosition,
         nextRecipientName = corpus.nextRecipientName,
         nextRecipientPosition = corpus.nextRecipientPosition,
@@ -251,6 +252,7 @@ private fun GroupDashboardCacheEntity.toDomain(): GroupDashboard {
             totalContributionsThisCycle = payload.corpus.totalContributionsThisCycle,
             totalLoansOutstanding = payload.corpus.totalLoansOutstanding,
             lastUpdated = payload.corpus.lastUpdated,
+            isCycleEnd = payload.corpus.isCycleEnd,
             rotationPosition = payload.corpus.rotationPosition,
             nextRecipientName = payload.corpus.nextRecipientName,
             nextRecipientPosition = payload.corpus.nextRecipientPosition,
