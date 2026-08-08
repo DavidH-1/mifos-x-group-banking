@@ -13,7 +13,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Wire DTO for one row of `get_center_meetings` — `GET /fineract-provider/api/v1/centers/{centerId}/meetings`
+ * Wire DTO for one row of `get_meeting_schedule` — `GET /fineract-provider/api/v1/datatables/dt_meeting_schedule/{groupId}`
  * (`idea-layer/screens/meeting-calendar/api.yaml#dtos.MeetingListResponse`). A single scheduled
  * meeting for the group center. [attendanceCount] / [totalCollectedKES] are populated only for
  * COMPLETED meetings, null for UPCOMING/MISSED.
@@ -28,6 +28,7 @@ data class MeetingListItemDto(
     @SerialName("status") val status: MeetingStatusDto = MeetingStatusDto.UNKNOWN,
     @SerialName("attendanceCount") val attendanceCount: Int? = null,
     @SerialName("totalCollectedKES") val totalCollectedKES: Long? = null,
+    @SerialName("meetingTime") val meetingTime: String = "",
 ) {
     companion object {
         const val SCHEMA_VERSION = 1
@@ -55,7 +56,7 @@ enum class MeetingStatusDto {
 
 /**
  * Wire DTO for `get_meeting_records_datatable` —
- * `GET /fineract-provider/api/v1/datatables/dt_meeting_record/{centerId}`
+ * `GET /fineract-provider/api/v1/datatables/dt_meeting_record/{groupId}`
  * (`api.yaml#dtos.MeetingRecordList`). The completed-meeting financial records for the center that
  * enrich the past-meeting rows with attendance + collected amounts.
  *
@@ -63,7 +64,7 @@ enum class MeetingStatusDto {
  */
 @Serializable
 data class MeetingRecordListDto(
-    @SerialName("centerId") val centerId: Int,
+    @SerialName("groupId") val groupId: Int,
     @SerialName("records") val records: List<MeetingRecordItemDto> = emptyList(),
 ) {
     companion object {

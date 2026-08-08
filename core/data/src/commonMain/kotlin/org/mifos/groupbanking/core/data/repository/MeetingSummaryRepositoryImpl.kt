@@ -16,17 +16,19 @@ import kpt.core.base.store.screen.FetchPolicy
 import kpt.core.base.store.screen.ScreenDataStream
 import kpt.core.base.store.screen.asScreenStream
 import kpt.core.store.AppStoreRegistry
+import org.mifos.groupbanking.core.database.meetingsummary.dao.MeetingRecordDao
 import org.mifos.groupbanking.core.model.MeetingSummaryData
+import org.mifos.groupbanking.core.store.meetingsummary.impl.primeMeetingSummaryCache
 import org.mobilenativefoundation.store.store5.Store
 
 /**
  * Store5-backed implementation of [MeetingSummaryRepository].
  *
- * The single-key read maps the (`centerId`, `meetingNumber`) pair to the composite store key
- * `"$centerId:$meetingNumber"` and goes exclusively through [Store.asScreenStream] so the whole
+ * The single-key read maps the (`groupId`, `meetingNumber`) pair to the composite store key
+ * `"$groupId:$meetingNumber"` and goes exclusively through [Store.asScreenStream] so the whole
  * offline-first pipeline (cached emit → background revalidate → DecisionEngine → ScreenState) is
  * inherited from `core-base`. The freshness [FetchedAtRepository] cacheKey is per-meeting
- * (`meetingsummary:record:{centerId}:{meetingNumber}`) so each meeting's TTL window is tracked
+ * (`meetingsummary:record:{groupId}:{meetingNumber}`) so each meeting's TTL window is tracked
  * independently. No DAO-bypass read, no `try-catch`, no `Result` envelope (RULE-IMPLEMENT-STORE5-001
  * S5-2).
  *
@@ -36,15 +38,16 @@ class MeetingSummaryRepositoryImpl(
     private val meetingSummaryStore: Store<String, MeetingSummaryData>,
     private val networkMonitor: NetworkMonitor,
     private val fetchedAtRepository: FetchedAtRepository,
+    private val meetingRecordDao: MeetingRecordDao,
 ) : MeetingSummaryRepository {
 
     override fun meetingSummaryStream(
-        centerId: Int,
+        groupId: Int,
         meetingNumber: Int,
         scope: CoroutineScope,
         fetchPolicy: FetchPolicy,
     ): ScreenDataStream<MeetingSummaryData> {
-        val key = "$centerId:$meetingNumber"
+        val key = "$groupId:$meetingNumber"
         return meetingSummaryStore.asScreenStream(
             key = key,
             networkMonitor = networkMonitor,
@@ -58,8 +61,18 @@ class MeetingSummaryRepositoryImpl(
         )
     }
 
+    override suspend fun primeSubmittedSummary(
+        groupId: Int,
+        meetingNumber: Int,
+        data: MeetingSummaryData,
+    ) {
+        // Write-through the just-submitted record into the read Store's SourceOfTruth so the summary
+        // is offline-first (see interface KDoc + primeMeetingSummaryCache).
+        primeMeetingSummaryCache(meetingRecordDao, groupId, meetingNumber, data)
+    }
+
     private companion object {
-        /** FetchedAtRepository key prefix — one freshness timestamp per (centerId, meetingNumber). */
+        /** FetchedAtRepository key prefix — one freshness timestamp per (groupId, meetingNumber). */
         const val CACHE_KEY_PREFIX = "meetingsummary:record:"
     }
 }

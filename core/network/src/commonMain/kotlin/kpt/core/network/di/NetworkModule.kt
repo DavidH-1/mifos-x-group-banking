@@ -135,12 +135,20 @@ val NetworkModule = module {
     single<HttpClient> {
         val defaultConfig = setupDefaultHttpClient(
             baseUrl = get<CompanionAuthApiConfig>().baseUrl,
+            // Talking to the companion (not Fineract directly): the companion handles tenancy, so
+            // no Fineract-Platform-TenantId header is attached here. Auth is the Bearer sessionToken
+            // added by companionAuthHeaderPlugin below.
             // EC30 client-side half: ignoreUnknownKeys + coerceInputValues so a server-added
             // field/enum value never crashes a staggered old client (pairs with the DTO
             // SCHEMA_VERSION + @SerialName("UNKNOWN") enum fallback in LoginSignupDto.kt).
             jsonConfig = Json {
                 ignoreUnknownKeys = true
                 coerceInputValues = true
+                // The companion may relay Fineract datatable columns that serialize booleans as the
+                // STRING "true"/"false" and may quote numbers; isLenient lets those relaxed JSON
+                // tokens parse into the DTO's Boolean/Double/Int fields (e.g. the group_type_config
+                // catalogue → GroupTypeConfigDto).
+                isLenient = true
             },
         )
         httpClient {
@@ -178,7 +186,7 @@ val NetworkModule = module {
     single<GroupApiConfig> { GroupApiConfig() }
     single<GroupApi> { GroupApiImpl(httpClient = get()) }
 
-    // Field-officer dashboard (FR-009) — raw Fineract reads (GET /centers, GET /groups,
+    // Field-officer dashboard (FR-009) — raw Fineract reads (GET /groups,
     // GET /runreports/FieldOfficerGroupReport) scoped by staffId. Reuses the shared HttpClient
     // singleton above (no second engine). The config binding is registered for override-surface
     // symmetry with CompanionAuthApiConfig even though the shared client dispatches the requests.
@@ -280,7 +288,7 @@ val NetworkModule = module {
     single<MeetingRecordApiConfig> { MeetingRecordApiConfig() }
     single<MeetingRecordApi> { MeetingRecordApiImpl(httpClient = get()) }
 
-    // Meeting calendar (get_center_meetings + get_meeting_records_datatable) — meeting-calendar
+    // Meeting calendar (get_meeting_schedule + get_meeting_records_datatable) — meeting-calendar
     // feature client stack. Reuses the shared HttpClient singleton above (same server, no second
     // engine). MeetingApi is wrapped by provideMeetingCalendarStore (appStoreModule) +
     // MeetingRepositoryImpl. Config binding registered for override-surface symmetry.

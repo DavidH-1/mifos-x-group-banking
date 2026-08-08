@@ -33,6 +33,38 @@ buildkonfig {
             STRING, "FRED_API_KEY",
             System.getenv("FRED_API_KEY") ?: localProps.getProperty("FRED_API_KEY", ""),
         )
+        // The companion server (mcp-mifosx Go BFF) is the app's single backend — it holds the
+        // service credential, does orchestration + proxying to the active Fineract instance. Every
+        // *ApiConfig#baseUrl default reads COMPANION_BASE_URL; the app never talks to Fineract
+        // directly. SoT: COMPANION_BASE_URL env / local.properties#companion.base.url.
+        buildConfigField(
+            STRING, "COMPANION_BASE_URL",
+            System.getenv("COMPANION_BASE_URL")
+                ?: localProps.getProperty("companion.base.url", "https://mifossave-companion.onrender.com"),
+        )
+        // Retained for any raw-Fineract passthrough config a fork may re-point; the app's governed
+        // base URL is COMPANION_BASE_URL above. instance-sync.sh still cascades these from the
+        // single-instance SoT (server-layer/migrations/instances.json#active).
+        buildConfigField(
+            STRING, "FINERACT_BASE_URL",
+            System.getenv("FINERACT_BASE_URL")
+                ?: localProps.getProperty("fineract.base.url", "https://mifos-bank-2.mifos.community"),
+        )
+        buildConfigField(
+            STRING, "FINERACT_TENANT",
+            System.getenv("FINERACT_TENANT")
+                ?: localProps.getProperty("fineract.tenant", "mifos-bank-2"),
+        )
+        // Anchor group id whose `dt_group_type_catalogue` multi-row datatable holds the 9 seeded
+        // group-type archetypes. The group-type-picker reads the global catalogue via
+        // GET /datatables/dt_group_type_catalogue/{anchorId} (direct Fineract). SoT: written to
+        // local.properties (fineract.catalogue.anchor.id); read here into
+        // kpt.core.network.BuildKonfig.FINERACT_CATALOGUE_ANCHOR_ID.
+        buildConfigField(
+            STRING, "FINERACT_CATALOGUE_ANCHOR_ID",
+            System.getenv("FINERACT_CATALOGUE_ANCHOR_ID")
+                ?: localProps.getProperty("fineract.catalogue.anchor.id", "25"),
+        )
     }
 }
 

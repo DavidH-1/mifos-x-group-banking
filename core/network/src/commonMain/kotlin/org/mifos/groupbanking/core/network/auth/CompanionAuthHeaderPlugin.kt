@@ -16,20 +16,19 @@ import kotlinx.coroutines.flow.first
 import org.mifos.groupbanking.core.datastore.session.CompanionSessionStore
 
 /**
- * Attaches `Authorization: Bearer <sessionToken>` to every companion request from the shared
- * companion [io.ktor.client.HttpClient], reading the current token from [CompanionSessionStore].
+ * Attaches `Authorization: Bearer <sessionToken>` to every request from the shared companion
+ * [io.ktor.client.HttpClient], reading the current session token from [CompanionSessionStore]
+ * (persisted as `sessionToken` on login — see `CompanionAuthApiImpl`).
  *
- * WHY: the companion server resolves the caller's identity server-side from the bearer token
- * (COMP-AUTH-003 pattern) — e.g. the organizer dashboard greets the real user by name, and any
- * per-user-scoped endpoint can key off the authenticated caller. Before this plugin only the
- * explicit `/companion/auth/me` call sent the token, so every other companion read arrived
- * anonymous and the server fell back to a generic identity ("Organizer").
+ * WHY: the companion server issues a `sessionToken` on `POST /companion/auth/login` and expects
+ * it back as a Bearer token on every subsequent call, so it can resolve the authenticated caller
+ * for per-user-scoped reads (dashboards, group scope, my-role).
  *
  * Contract:
- *  - Skips when no session is persisted (pre-login calls: login / self-register need no token) so
+ *  - Skips when no session is persisted (pre-login calls: the login POST itself needs no token) so
  *    it never sends an empty `Bearer `.
- *  - Never overwrites an Authorization header a caller already set (e.g. the explicit `/me` call),
- *    so existing behaviour is preserved.
+ *  - Never overwrites an Authorization header a caller already set (e.g. the explicit `/me`
+ *    call), so existing behaviour is preserved.
  *  - Lives in core/network (fork-owned), NOT core-base (template-shared): it uses a uniquely-named
  *    custom plugin so it cannot collide with the Auth/DefaultRequest plugins core-base installs.
  */

@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * Wire DTO for one completed meeting record
- * (`GET /datatables/dt_meeting_record/{centerId}?meetingNumber=N`) — the persisted meeting totals
+ * (`GET /datatables/dt_meeting_record/{groupId}?meetingNumber=N`) — the persisted meeting totals
  * plus the per-member savings breakdown and per-member loan activity, resolved in one round trip.
  * Generated from meeting-summary's own approved `api.yaml#dtos.MeetingRecordDetail`; the companion
  * bridge normalizes Fineract's raw `dt_meeting_record` datatable row before this client's Ktor
@@ -33,6 +33,7 @@ data class MeetingSummaryRecordDto(
     @SerialName("meetingId") val meetingId: String,
     @SerialName("meetingNumber") val meetingNumber: Int,
     @SerialName("actualDate") val actualDate: String,
+    @SerialName("meetingTime") val meetingTime: String = "",
     @SerialName("attendanceCount") val attendanceCount: Int,
     @SerialName("totalMemberCount") val totalMemberCount: Int,
     @SerialName("groupSavingsCollected") val groupSavingsCollected: Long,

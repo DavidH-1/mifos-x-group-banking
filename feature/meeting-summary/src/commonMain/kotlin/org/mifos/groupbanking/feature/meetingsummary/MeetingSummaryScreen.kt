@@ -43,15 +43,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kpt.core.base.designsystem.core.TopAppBarAction
 import kpt.core.base.ui.effects.EventsEffect
+import kpt.core.base.ui.util.ShareUtils
 import kpt.core.common.formatGrouped
 import kpt.core.designsystem.theme.spacing
 import kpt.core.ui.scaffold.KptScaffold
@@ -86,7 +85,6 @@ import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens
 import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens_meeting_summary_repayments_label
 import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens_meeting_summary_savings_breakdown_header
 import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens_meeting_summary_share_btn_description
-import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens_meeting_summary_share_copied
 import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens_meeting_summary_title
 import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens_meeting_summary_title_format
 import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens_meeting_summary_total_collected_label
@@ -94,7 +92,7 @@ import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens
 /**
  * Container for `meeting-summary-screen`. Collects [MeetingSummaryViewModel] state via
  * [collectAsStateWithLifecycle], consumes one-shot [MeetingSummaryEvent]s through [EventsEffect], and
- * delegates all rendering to the stateless [MeetingSummaryContent]. [centerId] / [meetingNumber] /
+ * delegates all rendering to the stateless [MeetingSummaryContent]. [groupId] / [meetingNumber] /
  * [meetingId] are the `ui.yaml#nav_params` values — supplied to [MeetingSummaryViewModel] via Koin
  * `parametersOf(...)` (matching `MeetingSummaryModule`).
  *
@@ -106,24 +104,24 @@ import org.mifos.groupbanking.feature.meetingsummary.generated.resources.screens
 internal fun MeetingSummaryScreen(
     meetingId: String,
     meetingNumber: Int,
-    centerId: Int,
+    groupId: Int,
     onNavigateDone: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MeetingSummaryViewModel = koinViewModel(
-        parameters = { parametersOf(centerId, meetingNumber, meetingId) },
+        parameters = { parametersOf(groupId, meetingNumber, meetingId) },
     ),
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val clipboardManager = LocalClipboardManager.current
-    val shareCopiedMessage = stringResource(Res.string.screens_meeting_summary_share_copied)
 
     EventsEffect(viewModel) { event ->
         when (event) {
             MeetingSummaryEvent.NavigateToCalendar -> onNavigateDone()
             is MeetingSummaryEvent.ShareSummary -> {
-                clipboardManager.setText(AnnotatedString(event.reportText))
-                snackbarHostState.showSnackbar(message = shareCopiedMessage)
+                // Open the platform OS share sheet (Android ACTION_SEND / iOS UIActivityViewController /
+                // desktop+web fallbacks) via the core-base ShareUtils — a silent clipboard copy read as
+                // "the share button does nothing". The share sheet still offers Copy as one option.
+                ShareUtils.shareText(event.reportText)
             }
         }
     }
@@ -270,7 +268,8 @@ internal fun MeetingSummaryHeroCard(summary: MeetingSummaryData, modifier: Modif
                 text = stringResource(
                     Res.string.screens_meeting_summary_meeting_date_format,
                     summary.meetingNumber,
-                    summary.actualDate,
+                    // Append the conducted wall-clock time when recorded: "date · HH:mm".
+                    if (summary.meetingTime.isNotBlank()) "${summary.actualDate} · ${summary.meetingTime}" else summary.actualDate,
                 ),
                 style = MaterialTheme.typography.bodyMedium,
             )

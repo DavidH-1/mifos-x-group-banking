@@ -32,6 +32,11 @@ import org.mifos.groupbanking.core.network.model.SelfRegisterRequestDto
 import org.mifos.groupbanking.core.network.model.UserProfileDto
 
 private const val TAG = "CompanionAuthApi"
+
+// Companion auth bridge endpoints (COMP-AUTH-001/002/003), served by the deployed companion
+// (mcp-mifosx Go BFF) resolved via the shared HttpClient's base URL from CompanionAuthApiConfig
+// (BuildKonfig.COMPANION_BASE_URL). The companion holds the Fineract service credential and
+// proxies to the active instance — the app never talks to Fineract directly.
 private const val SELF_REGISTER_PATH = "/companion/auth/self-register"
 private const val LOGIN_PATH = "/companion/auth/login"
 private const val ME_PATH = "/companion/auth/me"

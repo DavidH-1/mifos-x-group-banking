@@ -21,10 +21,10 @@ import org.mifos.groupbanking.core.model.meeting.MeetingSubmissionRequest
 import org.mifos.groupbanking.core.model.meeting.PreviousMeetingSummary
 import org.mifos.groupbanking.core.model.meeting.RepaymentSubmission
 import org.mifos.groupbanking.core.model.meeting.SavingsSubmission
-import org.mifos.groupbanking.core.network.model.CenterDetailDto
 import org.mifos.groupbanking.core.network.model.CorpusRecordDto
 import org.mifos.groupbanking.core.network.model.CreateAttendanceRequestDto
 import org.mifos.groupbanking.core.network.model.CreateMeetingRecordRequestDto
+import org.mifos.groupbanking.core.network.model.GroupMembersDetailDto
 import org.mifos.groupbanking.core.network.model.LoanDisbursalRequestDto
 import org.mifos.groupbanking.core.network.model.LoanListResponseDto
 import org.mifos.groupbanking.core.network.model.LoanRepaymentRequestDto
@@ -60,7 +60,7 @@ fun MeetingRecordDetailDto.toDomainModel(): PreviousMeetingSummary = PreviousMee
     attendanceCount = attendanceCount,
 )
 
-fun CenterDetailDto.toGroupMembers(): List<GroupMember> = activeClientMembers.map { member ->
+fun GroupMembersDetailDto.toGroupMembers(): List<GroupMember> = activeClientMembers.map { member ->
     GroupMember(
         memberId = member.id.toString(),
         name = member.displayName,
@@ -71,7 +71,7 @@ fun CenterDetailDto.toGroupMembers(): List<GroupMember> = activeClientMembers.ma
 }
 
 fun CorpusRecordDto.toDomainModel(): CorpusRecord = CorpusRecord(
-    centerId = centerId,
+    groupId = groupId,
     corpusBalance = corpusBalance,
     cashOnHand = cashOnHand,
     lastUpdatedMeeting = lastUpdatedMeeting,
@@ -103,7 +103,7 @@ fun LoanVoteRecordDto.toDomainModel(): LoanVoteRecord = LoanVoteRecord(
 // -- Domain request -> submission sub-payloads ------------------------------------------------------
 
 fun MeetingSubmissionRequest.toRecordDto(): CreateMeetingRecordRequestDto = CreateMeetingRecordRequestDto(
-    centerId = centerId,
+    groupId = groupId,
     meetingNumber = meetingNumber,
     actualDate = actualDate,
     openingCorpus = openingCorpus,
@@ -113,6 +113,7 @@ fun MeetingSubmissionRequest.toRecordDto(): CreateMeetingRecordRequestDto = Crea
     totalLoansDisbursed = totalLoansDisbursed,
     totalFinesCollected = totalFinesCollected,
     attendanceCount = attendanceCount,
+    completedTime = completedTime,
 )
 
 fun AttendanceSubmission.toDto(meetingId: String): CreateAttendanceRequestDto = CreateAttendanceRequestDto(
@@ -167,7 +168,7 @@ fun MeetingSubmissionRequest.toJsonPayload(): String {
     val payload = MeetingSubmissionPayloadDto(
         meetingId = meetingId,
         meetingNumber = meetingNumber,
-        centerId = centerId,
+        groupId = groupId,
         record = toRecordDto(),
         attendance = attendance.map { it.toDto(meetingId) },
         savings = savings.map { MeetingSavingsPayloadDto(it.savingsAccountId, it.toDto(actualDate)) },
