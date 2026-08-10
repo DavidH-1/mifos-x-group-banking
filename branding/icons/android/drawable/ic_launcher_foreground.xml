@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MifosSave adaptive-icon foreground — from docs/assets/branding/logo_dark.svg (dark theme).
+    Logo authored in the original 200x200 space; the wrapping <group> maps it into the
+    central 72dp safe zone of the 108dp adaptive canvas (scale 0.36, translate 18).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <group
+      android:scaleX="0.36"
+      android:scaleY="0.36"
+      android:translateX="18"
+      android:translateY="18">
+
+    <!-- outer ring -->
+    <path
+        android:strokeColor="#8BD68F"
+        android:strokeWidth="10"
+        android:fillColor="#00000000"
+        android:pathData="M22,100 a78,78 0 1,0 156,0 a78,78 0 1,0 -156,0 Z"/>
+
+    <!-- five members -->
+    <path
+        android:fillColor="#8BD68F"
+        android:pathData="M87,22 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0 Z
+                          M161,76 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0 Z
+                          M133,166 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0 Z
+                          M41,166 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0 Z
+                          M13,76 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0 Z"/>
+
+    <!-- shared corpus -->
+    <path
+        android:fillColor="#FFB95C"
+        android:pathData="M76,100 a24,24 0 1,0 48,0 a24,24 0 1,0 -48,0 Z"/>
+    <path
+        android:strokeColor="#1A1C19"
+        android:strokeWidth="2"
+        android:strokeAlpha="0.55"
+        android:fillColor="#00000000"
+        android:pathData="M84,100 a16,16 0 1,0 32,0 a16,16 0 1,0 -32,0 Z"/>
+  </group>
+</vector>
