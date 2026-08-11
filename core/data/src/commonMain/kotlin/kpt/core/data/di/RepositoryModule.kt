@@ -17,6 +17,64 @@ import kpt.core.base.common.di.CommonModule
 import kpt.core.base.store.infra.FetchedAtRepository
 import kpt.core.data.infra.NetworkMonitor
 import kpt.core.data.infra.impl.RoomFetchedAtRepository
+import kpt.core.data.repository.AuthRepository
+import kpt.core.data.repository.AuthRepositoryImpl
+import kpt.core.data.repository.ChangePinRepository
+import kpt.core.data.repository.ChangePinRepositoryImpl
+import kpt.core.data.repository.FieldOfficerDashboardRepository
+import kpt.core.data.repository.FieldOfficerDashboardRepositoryImpl
+import kpt.core.data.repository.GroupCreateRepository
+import kpt.core.data.repository.GroupCreateRepositoryImpl
+import kpt.core.data.repository.GroupDashboardRepository
+import kpt.core.data.repository.GroupDashboardRepositoryImpl
+import kpt.core.data.repository.GroupRepository
+import kpt.core.data.repository.GroupRepositoryImpl
+import kpt.core.data.repository.GroupTypeConfigRepository
+import kpt.core.data.repository.GroupTypeConfigRepositoryImpl
+import kpt.core.data.repository.InvitationRepository
+import kpt.core.data.repository.InvitationRepositoryImpl
+import kpt.core.data.repository.LoanApplyRepository
+import kpt.core.data.repository.LoanApplyRepositoryImpl
+import kpt.core.data.repository.LoanDetailRepository
+import kpt.core.data.repository.LoanDetailRepositoryImpl
+import kpt.core.data.repository.LoanRepaymentRepository
+import kpt.core.data.repository.LoanRepaymentRepositoryImpl
+import kpt.core.data.repository.LoanRepository
+import kpt.core.data.repository.LoanRepositoryImpl
+import kpt.core.data.repository.LoanRequestRepository
+import kpt.core.data.repository.LoanRequestRepositoryImpl
+import kpt.core.data.repository.LoanWriteoffRepository
+import kpt.core.data.repository.LoanWriteoffRepositoryImpl
+import kpt.core.data.repository.LocalCacheCleaner
+import kpt.core.data.repository.MeetingConductRepository
+import kpt.core.data.repository.MeetingConductRepositoryImpl
+import kpt.core.data.repository.MeetingRepository
+import kpt.core.data.repository.MeetingRepositoryImpl
+import kpt.core.data.repository.MeetingSummaryRepository
+import kpt.core.data.repository.MeetingSummaryRepositoryImpl
+import kpt.core.data.repository.MemberAddRepository
+import kpt.core.data.repository.MemberAddRepositoryImpl
+import kpt.core.data.repository.MemberDashboardRepository
+import kpt.core.data.repository.MemberDashboardRepositoryImpl
+import kpt.core.data.repository.MemberInviteRepository
+import kpt.core.data.repository.MemberInviteRepositoryImpl
+import kpt.core.data.repository.MemberProfileRepository
+import kpt.core.data.repository.MemberProfileRepositoryImpl
+import kpt.core.data.repository.MemberRepository
+import kpt.core.data.repository.MemberRepositoryImpl
+import kpt.core.data.repository.OrganizerDashboardRepository
+import kpt.core.data.repository.OrganizerDashboardRepositoryImpl
+import kpt.core.data.repository.PreviousMeetingReviewRepository
+import kpt.core.data.repository.PreviousMeetingReviewRepositoryImpl
+import kpt.core.data.repository.RoomLocalCacheCleaner
+import kpt.core.data.repository.SavingsRepository
+import kpt.core.data.repository.SavingsRepositoryImpl
+import kpt.core.data.repository.ShareOutRepository
+import kpt.core.data.repository.ShareOutRepositoryImpl
+import kpt.core.data.repository.SyncManager
+import kpt.core.data.repository.SyncManagerImpl
+import kpt.core.data.repository.SyncQueueRepository
+import kpt.core.data.repository.SyncQueueRepositoryImpl
 import kpt.core.data.user.UserDataRepository
 import kpt.core.data.user.UserLogoutManager
 import kpt.core.data.user.impl.UserDataRepositoryImpl
@@ -30,66 +88,6 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import org.mifos.groupbanking.core.data.demo.DemoSessionManager
-import org.mifos.groupbanking.core.data.demo.DemoSessionManagerImpl
-import org.mifos.groupbanking.core.data.repository.AuthRepository
-import org.mifos.groupbanking.core.data.repository.AuthRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.ChangePinRepository
-import org.mifos.groupbanking.core.data.repository.ChangePinRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.FieldOfficerDashboardRepository
-import org.mifos.groupbanking.core.data.repository.FieldOfficerDashboardRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.GroupCreateRepository
-import org.mifos.groupbanking.core.data.repository.GroupCreateRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.GroupDashboardRepository
-import org.mifos.groupbanking.core.data.repository.GroupDashboardRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.GroupRepository
-import org.mifos.groupbanking.core.data.repository.GroupRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.GroupTypeConfigRepository
-import org.mifos.groupbanking.core.data.repository.GroupTypeConfigRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.InvitationRepository
-import org.mifos.groupbanking.core.data.repository.InvitationRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.LoanApplyRepository
-import org.mifos.groupbanking.core.data.repository.LoanApplyRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.LoanDetailRepository
-import org.mifos.groupbanking.core.data.repository.LoanDetailRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.LoanRepaymentRepository
-import org.mifos.groupbanking.core.data.repository.LoanRepaymentRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.LoanRepository
-import org.mifos.groupbanking.core.data.repository.LoanRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.LoanRequestRepository
-import org.mifos.groupbanking.core.data.repository.LoanRequestRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.LoanWriteoffRepository
-import org.mifos.groupbanking.core.data.repository.LoanWriteoffRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.LocalCacheCleaner
-import org.mifos.groupbanking.core.data.repository.MeetingConductRepository
-import org.mifos.groupbanking.core.data.repository.MeetingConductRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.MeetingRepository
-import org.mifos.groupbanking.core.data.repository.MeetingRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.MeetingSummaryRepository
-import org.mifos.groupbanking.core.data.repository.MeetingSummaryRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.MemberAddRepository
-import org.mifos.groupbanking.core.data.repository.MemberAddRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.MemberDashboardRepository
-import org.mifos.groupbanking.core.data.repository.MemberDashboardRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.MemberInviteRepository
-import org.mifos.groupbanking.core.data.repository.MemberInviteRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.MemberProfileRepository
-import org.mifos.groupbanking.core.data.repository.MemberProfileRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.MemberRepository
-import org.mifos.groupbanking.core.data.repository.MemberRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.OrganizerDashboardRepository
-import org.mifos.groupbanking.core.data.repository.OrganizerDashboardRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.PreviousMeetingReviewRepository
-import org.mifos.groupbanking.core.data.repository.PreviousMeetingReviewRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.RoomLocalCacheCleaner
-import org.mifos.groupbanking.core.data.repository.SavingsRepository
-import org.mifos.groupbanking.core.data.repository.SavingsRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.ShareOutRepository
-import org.mifos.groupbanking.core.data.repository.ShareOutRepositoryImpl
-import org.mifos.groupbanking.core.data.repository.SyncManager
-import org.mifos.groupbanking.core.data.repository.SyncManagerImpl
-import org.mifos.groupbanking.core.data.repository.SyncQueueRepository
-import org.mifos.groupbanking.core.data.repository.SyncQueueRepositoryImpl
 
 val DataModule = module {
     includes(platformModule, CommonModule, DatabaseModule, DatastoreModule, NetworkModule)
@@ -101,27 +99,6 @@ val DataModule = module {
     // processor), wraps CompanionAuthApi (NetworkModule) + CompanionSessionStore (DatastoreModule).
     single<LocalCacheCleaner> { RoomLocalCacheCleaner(database = get<AppDatabase>()) }
     single<AuthRepository> { AuthRepositoryImpl(api = get(), sessionStore = get(), cacheCleaner = get(), userDataRepository = get()) }
-
-    // login-signup Demo Explore offline guest session (ui.yaml#demo_confirm_dialog,
-    // flow.yaml#on_demo_confirm). Seeds the offline read caches the Demo-Explore mode browses —
-    // organizer-dashboard (landing) + group-list + group-dashboard + member-list + loan-list — from
-    // the bundled PROJECT_DEMO_DATA fixture, then persists a synthetic demo session. 100% offline,
-    // no companion API / Fineract. NOT seeded: savings-dashboard (its SavingsRepository is
-    // Store5-free / network-only — no Room SourceOfTruth to write). Not a Store5 read-store
-    // (business_logic.kind: processor) — a session-scoped seed manager, same branch as SyncManager /
-    // UserLogoutManager below. Depends on CompanionSessionStore (DatastoreModule) + the four read
-    // DAOs it seeds (DatabaseModule) + FetchedAtRepository (below).
-    single<DemoSessionManager> {
-        DemoSessionManagerImpl(
-            sessionStore = get(),
-            organizerDashboardDao = get<AppDatabase>().organizerDashboardDao,
-            groupListDao = get<AppDatabase>().groupListDao,
-            groupDashboardDao = get<AppDatabase>().groupDashboardDao,
-            memberListDao = get<AppDatabase>().memberListDao,
-            loanListDao = get<AppDatabase>().loanListDao,
-            fetchedAtRepository = get(),
-        )
-    }
 
     // group-type-picker seeded catalogue (COMP-DT-003) — wraps the NETWORK_WITH_CACHE
     // GroupTypeConfigStore (bound via AppStoreRegistry.GroupTypeConfig in appStoreModule) and
